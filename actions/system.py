@@ -3,6 +3,10 @@ import os
 import datetime
 import platform
 import pyautogui
+import cv2
+import pytesseract
+import numpy as np
+import time
 
 
 def get_time():
@@ -105,3 +109,142 @@ def take_screenshot():
     except Exception as e:
         print(f"Error taking screenshot: {e}")
         return "I couldn't take a screenshot."
+
+
+def find_text_on_screen(target_text):
+    """
+    Find specific text on screen using OCR and return its center coordinates.
+    
+    Uses pytesseract (Tesseract OCR engine) to detect all text on screen,
+    then searches for the target text and returns pixel coordinates.
+    
+    Args:
+        target_text: Text to search for (e.g., "Submit", "Username", "Login")
+        
+    Returns:
+        Tuple (center_x, center_y) if found, None if not found
+        
+    Raises:
+        ImportError: If pytesseract or tesseract-ocr is not installed
+        
+    Example:
+        coords = find_text_on_screen("Submit")
+        if coords:
+            x, y = coords
+            pyautogui.click(x, y)  # Click on the Submit button
+        else:
+            print("Text not found on screen")
+    """
+    try:
+        # STEP 1: Capture screenshot into memory (PIL Image)
+        # This avoids writing to disk and is faster than loading from file
+        screenshot = pyautogui.screenshot()
+        
+        # STEP 2: Convert PIL Image to numpy array for cv2 processing
+        # cv2 works with numpy arrays, not PIL Images
+        img_array = np.array(screenshot)
+        
+        # STEP 3: Convert BGR (OpenCV color space) to RGB
+        # pyautogui.screenshot() returns RGB, cv2 expects BGR
+        img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+        
+        # STEP 4: Convert to grayscale for better OCR accuracy
+        # Grayscale simplifies the image and improves text detection
+        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+        
+        # STEP 5: Use pytesseract.image_to_data() to detect all text with coordinates
+        # Returns detailed info: x, y, width, height for each detected word
+        data = pytesseract.image_to_data(gray)
+        
+        # STEP 6: Parse OCR results and search for target text
+        # image_to_data returns tab-separated values with headers
+        lines = data.split('\n')
+        
+        for line in lines[1:]:  # Skip header line
+            if not line.strip():
+                continue
+                
+            parts = line.split('\t')
+            if len(parts) < 12:  # Ensure we have all required fields
+                continue
+            
+            # Extract coordinates from OCR result
+            x = int(parts[1])           # Left position
+            y = int(parts[2])           # Top position
+            w = int(parts[3])           # Width
+            h = int(parts[4])           # Height
+            detected_text = parts[11]   # Text content (0-indexed)
+            
+            # STEP 7: Check if target text matches (case-insensitive)
+            # Use .lower() for case-insensitive matching
+            if target_text.lower() in detected_text.lower():
+                # STEP 8: Calculate center coordinates
+                # Center point is useful for clicking on buttons/text
+                center_x = x + (w // 2)
+                center_y = y + (h // 2)
+                
+                print(f"Found '{detected_text}' at ({center_x}, {center_y})")
+                return (center_x, center_y)
+        
+        # STEP 9: Return None if text not found on screen
+        print(f"Text '{target_text}' not found on screen")
+        return None
+        
+    except ImportError as e:
+        print(f"Error: pytesseract or tesseract-ocr not installed: {e}")
+        print("Install with: pip install pytesseract")
+        print("Also install tesseract-ocr from: https://github.com/UB-Mannheim/tesseract/wiki")
+        return None
+    except Exception as e:
+        print(f"Error finding text on screen: {e}")
+        return None
+
+
+def click_text(target_text):
+    """
+    Find text on screen and click on it using OCR.
+    
+    This function combines OCR detection with automated clicking to interact
+    with UI elements based on visible text. Useful for clicking buttons,
+    links, or form fields when their positions are not hardcoded.
+    
+    Args:
+        target_text: Text to find and click on (e.g., "Submit", "Login", "Next")
+        
+    Returns:
+        String message indicating success or failure
+        
+    Safety Features:
+        - 0.5 second delay before clicking (prevents accidental rapid clicks)
+        - Returns feedback message for logging and debugging
+        - Graceful error handling for missing text or OCR failures
+        
+    Example:
+        result = click_text("Submit")
+        # Returns: "Clicked on Submit" or "Couldn't find Submit on screen"
+    """
+    try:
+        # SAFETY 1: Find text before clicking to ensure it exists
+        # This prevents accidental clicks at wrong coordinates
+        position = find_text_on_screen(target_text)
+        
+        if position:
+            x, y = position
+            
+            # SAFETY 2: Small delay before clicking
+            # 0.5 seconds gives the system time to stabilize after screen change
+            # Also prevents rapid accidental double-clicks
+            time.sleep(0.5)
+            
+            # SAFETY 3: Use pyautogui.click() with centered coordinates
+            # Click is sent to the center of the text element (calculated in find_text_on_screen)
+            pyautogui.click(x, y)
+            
+            return f"Clicked on {target_text}"
+        else:
+            # Text not found on screen
+            return f"Couldn't find {target_text} on screen"
+            
+    except Exception as e:
+        print(f"Error clicking text: {e}")
+        return f"Error trying to click {target_text}: {str(e)}"

@@ -1,0 +1,95 @@
+{
+  "open chrome": {
+    "action": "open_app",
+    "response": "Opening chrome boss.",
+    "count": 4,
+    "last_used": "2026-04-11T17:50:22.560006"
+  },
+  "i like cricket": {
+    "action": "ask_brain",
+    "response": "Cool! Cricket is a fun sport. What teams do you follow?",
+    "count": 2,
+    "last_used": "2026-04-11T17:50:38.049580"
+  },
+  "remember allah cricket": {
+    "action": "remember_fact",
+    "response": "Got it boss. I'll remember that.",
+    "count": 1,
+    "last_used": "2026-04-11T17:50:51.244797"
+  },
+  "what do you remember": {
+    "action": "remember_fact",
+    "response": "Got it boss. I'll remember that.",
+    "count": 2,
+    "last_used": "2026-04-11T17:54:14.255754"
+  },
+  "i said what do you remember": {
+    "action": "remember_fact",
+    "response": "Got it boss. I'll remember that.",
+    "count": 1,
+    "last_used": "2026-04-11T17:51:13.323093"
+  },
+  "remember ala cricket": {
+    "action": "remember_fact",
+    "response": "Got it boss. I'll remember that.",
+    "count": 1,
+    "last_used": "2026-04-11T17:53:42.543282"
+  },
+  "remember i like cricket": {
+    "action": "remember_fact",
+    "response": "Got it boss. I'll remember that.",
+    "count": 1,
+    "last_used": "2026-04-11T17:53:52.538153"
+  },
+  "remember i like gaming": {
+    "action": "remember_fact",
+    "response": "Got it boss. I'll remember that.",
+    "count": 1,
+    "last_used": "2026-04-11T17:54:04.284810"
+  },
+  "remember i like movies": {
+    "action": "remember_fact",
+    "response": "Got it boss. I'll remember that.",
+    "count": 1,
+    "last_used": "2026-04-11T17:57:07.578747"
+  },
+  "remember ok": {
+    "action": "invalid",
+    "response": "That didn't make sense boss. Try saying something longer or more specific.",
+    "count": 1,
+    "last_used": "2026-04-11T17:57:17.765365"
+  },
+  "remember what do you": {
+    "action": "invalid",
+    "response": "That didn't make sense boss. Try saying something longer or more specific.",
+    "count": 1,
+    "last_used": "2026-04-11T17:57:31.046454"
+  },
+  "remember i said something": {
+    "action": "invalid",
+    "response": "That didn't make sense boss. Try saying something longer or more specific.",
+    "count": 1,
+    "last_used": "2026-04-11T17:57:43.129759"
+  },
+  "open_app:chrome": {
+    "action": "open_app",
+    "target": "chrome",
+    "response": "Starting up chrome.",
+    "count": 7,
+    "last_used": "2026-04-11T18:07:23.003702"
+  },
+  "open_url:youtube": {
+    "action": "open_url",
+    "target": "youtube",
+    "response": "Opening youtube.",
+    "count": 7,
+    "last_used": "2026-04-11T18:13:10.554834"
+  },
+  "open_app:youtube": {
+    "action": "open_app",
+    "target": "youtube",
+    "response": "Got it. Starting youtube.",
+    "count": 2,
+    "last_used": "2026-04-11T18:08:44.648198"
+  }
+}

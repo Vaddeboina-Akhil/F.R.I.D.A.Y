@@ -1,5 +1,6 @@
 import requests
 import json
+from memory.learning import get_cached_command, cache_command
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "qwen2.5:3b"
@@ -12,6 +13,12 @@ SYSTEM_PROMPT = "You are FRIDAY, a highly intelligent AI assistant built for you
 def ask_brain(user_input):
     """Send a prompt to Ollama and get a response with conversation history"""
     try:
+        # Check cache first
+        cached = get_cached_command(user_input)
+        if cached and cached.get("count", 0) > 2:
+            print("Using cached response")
+            return cached["response"]
+        
         global conversation_history
         
         # Add user message to history
@@ -49,6 +56,9 @@ def ask_brain(user_input):
         
         # Extract and clean response
         response_text = response.json()["response"].strip()
+        
+        # Cache the response
+        cache_command(user_input, "ask_brain", response_text)
         
         # Add assistant message to history
         conversation_history.append({"role": "assistant", "content": response_text})

@@ -1,0 +1,17 @@
+{
+  "i like cricket": {
+    "text": "i like cricket",
+    "stored_at": "2026-04-11T17:53:52.531896",
+    "recall_count": 0
+  },
+  "i like gaming": {
+    "text": "i like gaming",
+    "stored_at": "2026-04-11T17:54:04.279248",
+    "recall_count": 0
+  },
+  "i like movies": {
+    "text": "i like movies",
+    "stored_at": "2026-04-11T17:57:07.577848",
+    "recall_count": 0
+  }
+}

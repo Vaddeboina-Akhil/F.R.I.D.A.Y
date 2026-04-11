@@ -6,52 +6,95 @@ KNOWN_APPS = [
     "obs", "blender", "photoshop", "illustrator", "premiere"
 ]
 
+# Website targets that should never be treated as apps
+# This safeguard prevents "open youtube" from becoming open_app
+WEBSITE_TARGETS = ["youtube", "google", "chatgpt", "gmail"]
+
+# Import intent mapper for flexible command parsing
+from brain.intent_mapper import normalize_command
+
 
 def parse_command(text):
     """Parse user input and extract action and target"""
     try:
         text = text.lower().strip()
         
-        # Open/Launch/Start apps
-        if any(cmd in text for cmd in ["open", "launch", "start"]):
-            for cmd in ["open", "launch", "start"]:
-                if cmd in text:
-                    app_name = text.split(cmd, 1)[1].strip()
-                    if app_name and (app_name in KNOWN_APPS or len(app_name) > 0):
-                        return {"action": "open_app", "target": app_name}
+        # ===== PRIORITY 1: Special Memory Commands (highest priority) =====
+        # These are very specific and should not trigger intent mapping
         
-        # Close/Kill apps
-        if "close" in text or "kill" in text:
-            for cmd in ["close", "kill"]:
-                if cmd in text:
-                    app_name = text.split(cmd, 1)[1].strip()
-                    if app_name:
-                        return {"action": "close_app", "target": app_name}
+        # Recall memory - MUST come before "Remember fact" to avoid false positives
+        # "what do you remember" contains "remember" so it needs higher priority
+        if "what do you know about me" in text or "what do you remember" in text:
+            return {"action": "recall_memory", "target": None}
         
-        # YouTube search
-        if "search" in text and "youtube" in text:
-            query = text
-            if "search youtube for" in text:
-                query = text.split("search youtube for")[1].strip()
-            elif "for" in text:
-                query = text.split("for")[1].strip()
+        # Clear memory
+        if "clear memory" in text or "forget everything" in text:
+            return {"action": "clear_memory", "target": None}
+        
+        # Get habits/most used commands
+        if any(phrase in text for phrase in ["what do i usually", "most used", "my habits"]):
+            return {"action": "get_habits", "target": None}
+        
+        # Remember fact - more generic, checks for "remember" anywhere in text
+        # This runs after specific recall checks to avoid matching phrases like "what do you remember"
+        if "remember" in text:
+            fact = text.replace("remember", "").strip()
+            
+            # Validate fact to prevent storing invalid/incomplete statements
+            # - Too short facts (< 5 chars) are usually mistakes or unclear
+            # - Phrases with "what do you" indicate questions, not facts to remember
+            # - Statements starting with "i said" are conversational, not factual
+            # - Empty facts after cleanup should not be stored
+            if len(fact) < 5 or "what do you" in fact or fact.startswith("i said") or not fact:
+                return {"action": "invalid", "target": None}
+            
+            return {"action": "remember_fact", "target": fact}
+        
+        # ===== PRIORITY 2: Click Command (automated UI clicking) =====
+        # "click submit", "click next", "click login" → find and click text on screen
+        if text.startswith("click"):
+            target = text.replace("click", "").strip()
+            if target:
+                return {"action": "click_text", "target": target}
             else:
-                query = text.split("youtube")[1].strip()
-            return {"action": "search_youtube", "target": query}
+                return {"action": "invalid", "target": None}
         
-        # Google search
-        if "search" in text or "google" in text:
-            query = text
-            if "search for" in text:
-                query = text.split("search for")[1].strip()
-            elif "search" in text:
-                query = text.split("search")[1].strip()
-            elif "google for" in text:
-                query = text.split("google for")[1].strip()
-            elif "google" in text:
-                query = text.split("google")[1].strip()
-            return {"action": "search_google", "target": query}
+        # ===== PRIORITY 3: Intent Mapping (flexible, pattern-based) =====
+        # Use intent mapper for flexible command parsing
+        normalized = normalize_command(text)
         
+        if normalized["intent"]:
+            # Map detected intents to actions
+            intent = normalized["intent"]
+            target = normalized["target"]
+            
+            if intent == "open_app":
+                # SAFEGUARD: Check if target is a website, not an app
+                # This prevents "open youtube", "launch google", etc. from being treated as apps
+                # Websites should always route to "open_url" action for proper browser handling
+                if target and target.lower() in WEBSITE_TARGETS:
+                    return {"action": "open_url", "target": target}
+                return {"action": "open_app", "target": target}
+            elif intent == "open_website":
+                return {"action": "open_url", "target": target}
+            elif intent == "search":
+                return {"action": "search_google", "target": target}
+            elif intent == "close_app":
+                return {"action": "close_app", "target": target}
+            elif intent == "take_screenshot":
+                return {"action": "take_screenshot", "target": None}
+            elif intent == "get_time":
+                return {"action": "get_time", "target": None}
+            elif intent == "get_date":
+                return {"action": "get_date", "target": None}
+            elif intent == "get_battery":
+                return {"action": "get_battery", "target": None}
+            elif intent == "shutdown":
+                return {"action": "shutdown_pc", "target": None}
+            elif intent == "restart":
+                return {"action": "restart_pc", "target": None}
+        
+        # ===== PRIORITY 3: Specific website commands (high-value targets) =====
         # Open YouTube
         if "youtube" in text:
             return {"action": "open_url", "target": "youtube"}
@@ -68,30 +111,19 @@ def parse_command(text):
         if any(word in text for word in ["world", "whats going on", "what's going on", "outside"]):
             return {"action": "open_world_monitor", "target": None}
         
-        # Time
-        if "time" in text:
-            return {"action": "get_time", "target": None}
+        # ===== PRIORITY 4: Fallback for YouTube search (specific targeting) =====
+        # YouTube search - check after open_url to prioritize opening youtube.com
+        if "search" in text and "youtube" in text:
+            query = text
+            if "search youtube for" in text:
+                query = text.split("search youtube for")[1].strip()
+            elif "for" in text:
+                query = text.split("for")[1].strip()
+            else:
+                query = text.split("youtube")[1].strip()
+            return {"action": "search_youtube", "target": query}
         
-        # Date
-        if "date" in text:
-            return {"action": "get_date", "target": None}
-        
-        # Battery
-        if "battery" in text:
-            return {"action": "get_battery", "target": None}
-        
-        # Screenshot
-        if "screenshot" in text:
-            return {"action": "take_screenshot", "target": None}
-        
-        # Shutdown
-        if "shutdown" in text:
-            return {"action": "shutdown_pc", "target": None}
-        
-        # Restart
-        if "restart" in text:
-            return {"action": "restart_pc", "target": None}
-        
+        # ===== PRIORITY 5: Default conversation =====
         # Default: pass to brain for conversation
         return {"action": "ask_brain", "target": text}
     
