@@ -12,16 +12,21 @@ WEBSITE_TARGETS = ["youtube", "google", "chatgpt", "gmail"]
 
 # YouTube-specific keywords - searches with these terms prefer YouTube
 YOUTUBE_KEYWORDS = [
-    "tutorial", "tutorials", "video", "videos", "song", "songs", "music",
-    "movie", "movies", "watch", "mrbeast", "mr beast", "shorts", "gameplay",
-    "review", "trailer", "vlog", "podcast", "anime", "funny", "comedy",
-    "stream", "streaming", "live"
+    "tutorial", "tutorials", "video", "videos", "song", "songs",
+    "music", "movie", "movies", "watch", "shorts", "gameplay",
+    "review", "trailer", "vlog", "podcast", "anime", "funny",
+    "comedy", "stream", "live", "coding", "mrbeast", "pewdiepie",
+    "how to", "diy", "recipe", "dance", "cover", "remix"
 ]
 
 # Google-specific keywords - searches with these terms prefer Google
 GOOGLE_KEYWORDS = [
-    "news", "weather", "price", "definition", "meaning", "who is", "what is",
-    "when did", "how much", "wikipedia", "wiki"
+    "score", "scores", "news", "weather", "price", "prices",
+    "definition", "meaning", "wiki", "wikipedia", "who is",
+    "when did", "how much", "stock", "rate", "result", "results",
+    "match", "ipl", "cricket", "football", "nba", "nfl",
+    "today", "latest", "current", "live score", "election",
+    "population", "capital", "distance", "time in", "convert"
 ]
 
 # Import intent mapper for flexible command parsing
@@ -51,34 +56,42 @@ def parse_command(text):
                 return {"action": "open_and_search", "target": f"{app}|{query}"}
         
         # Check if text starts with "search", "find", or "look up"
-        text_words = text.split()
-        if text_words and text_words[0] in ["search", "find", "look up"] or text.startswith("look up"):
-            # Extract query
-            if "for" in text:
-                query = text.split("for", 1)[1].strip()
-            else:
-                # Skip the first word (search/find/look)
-                if text.startswith("look up"):
-                    query = text.replace("look up", "", 1).strip()
-                else:
-                    query = text.split(None, 1)[1] if len(text_words) > 1 else ""
-            
-            query = query.strip()
-            
-            # YouTube keywords for smart routing
-            YOUTUBE_KEYWORDS = [
-                "tutorial", "tutorials", "video", "videos", "song", "songs",
-                "music", "movie", "movies", "watch", "mrbeast", "mr beast",
-                "shorts", "gameplay", "review", "trailer", "vlog", "podcast",
-                "anime", "funny", "comedy", "stream", "streaming", "live",
-                "python", "coding"
-            ]
-            
-            # If any keyword in query, search YouTube; default to YouTube
-            if any(keyword in query.lower() for keyword in YOUTUBE_KEYWORDS):
+        if "search" in text or "find" in text or "look up" in text:
+            # STEP 1: Check for explicit YouTube mention
+            if "youtube" in text:
+                # Extract query after "youtube" and clean
+                query = text.split("youtube", 1)[1]
+                query = query.replace("search", "").replace("for", "").replace("in", "").replace("on", "").strip()
                 return {"action": "search_youtube", "target": query}
             
-            return {"action": "search_youtube", "target": query}
+            # STEP 2: Check for explicit Google mention
+            if "google" in text:
+                # Extract query after "google" and clean
+                query = text.split("google", 1)[1]
+                query = query.replace("search", "").replace("for", "").replace("in", "").replace("on", "").strip()
+                return {"action": "search_google", "target": query}
+            
+            # STEP 3: Extract general query
+            if "for" in text:
+                query = text.split("for", 1)[1]
+            else:
+                # Remove search/find/look up and get the rest
+                query = text.replace("search", "").replace("find", "").replace("look up", "").strip()
+            
+            query = query.strip()
+            query_lower = query.lower()
+            
+            # STEP 4: Smart keyword-based routing
+            # Check for YouTube keywords first (video/media content)
+            if any(keyword in query_lower for keyword in YOUTUBE_KEYWORDS):
+                return {"action": "search_youtube", "target": query}
+            
+            # Check for Google keywords (factual/informational content)
+            if any(keyword in query_lower for keyword in GOOGLE_KEYWORDS):
+                return {"action": "search_google", "target": query}
+            
+            # STEP 5: Default to Google for unknown factual searches
+            return {"action": "search_google", "target": query}
         
         # ===== PRIORITY 1: Special Memory Commands (highest priority) =====
         # These are very specific and should not trigger intent mapping

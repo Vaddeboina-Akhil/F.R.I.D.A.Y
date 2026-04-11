@@ -22,6 +22,12 @@ COMMON_APPS = {
     "powerpoint": "powerpnt.exe",
     "vlc": "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe",
     "steam": "C:\\Program Files (x86)\\Steam\\steam.exe",
+    "github": "C:\\Users\\akhil\\AppData\\Local\\GitHubDesktop\\GitHubDesktop.exe",
+    "github desktop": "C:\\Users\\akhil\\AppData\\Local\\GitHubDesktop\\GitHubDesktop.exe",
+    "notion": "C:\\Users\\akhil\\AppData\\Local\\Programs\\Notion\\Notion.exe",
+    "postman": "C:\\Users\\akhil\\AppData\\Local\\Postman\\Postman.exe",
+    "obs": "C:\\Program Files\\obs-studio\\bin\\64bit\\obs64.exe",
+    "figma": "C:\\Users\\akhil\\AppData\\Local\\Figma\\Figma.exe",
 }
 
 
