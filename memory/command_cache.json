@@ -159,8 +159,8 @@
     "action": "ask_brain",
     "target": null,
     "response": "Hey there! What can I help with MrBeast today? Maybe some interesting facts or his latest video stats?",
-    "count": 6,
-    "last_used": "2026-04-11T19:55:42.682031"
+    "count": 22,
+    "last_used": "2026-04-11T21:13:44.773500"
   },
   "ask_brain:for mrbeast": {
     "action": "ask_brain",
@@ -201,8 +201,8 @@
     "action": "open_app",
     "target": "github",
     "response": "I couldn't find github on your system.",
-    "count": 1,
-    "last_used": "2026-04-11T19:56:27.860983"
+    "count": 5,
+    "last_used": "2026-04-11T20:39:36.040585"
   },
   "search_youtube:python tutorials": {
     "action": "search_youtube",
@@ -224,5 +224,180 @@
     "response": "Searching YouTube for ipl score.",
     "count": 1,
     "last_used": "2026-04-11T19:57:20.280429"
+  },
+  "open_and_search:youtube|valorant live stream": {
+    "action": "open_and_search",
+    "target": "youtube|valorant live stream",
+    "response": "Opening browser and searching for valorant live stream boss.",
+    "count": 1,
+    "last_used": "2026-04-11T20:02:03.960045"
+  },
+  "ask_brain:what is the news right now": {
+    "action": "ask_brain",
+    "target": "what is the news right now",
+    "response": "Boss, I can't pull up current news here. Maybe we can catch you up on your favorite sites later?",
+    "count": 1,
+    "last_used": "2026-04-11T20:02:24.095102"
+  },
+  "ask_brain:what's the ipl score": {
+    "action": "ask_brain",
+    "target": "what's the ipl score",
+    "response": "Boss, I\u2019d need to use an external tool to check the latest IPL scores for you. How about I look it up quickly?",
+    "count": 1,
+    "last_used": "2026-04-11T20:02:44.405844"
+  },
+  "search_google:chhatrapati": {
+    "action": "search_google",
+    "target": "chhatrapati",
+    "response": "Searching for chhatrapati now.",
+    "count": 1,
+    "last_used": "2026-04-11T20:03:21.297828"
+  },
+  "open_app:getup": {
+    "action": "open_app",
+    "target": "getup",
+    "response": "Got it. Starting getup.",
+    "count": 2,
+    "last_used": "2026-04-11T20:12:25.146359"
+  },
+  "search_youtube:triggered insaan new latest video": {
+    "action": "search_youtube",
+    "target": "triggered insaan new latest video",
+    "response": "Let me find that on YouTube.",
+    "count": 1,
+    "last_used": "2026-04-11T20:10:07.207724"
+  },
+  "search_google:what's the ipl score": {
+    "action": "search_google",
+    "target": "what's the ipl score",
+    "response": "Looking that up for you.",
+    "count": 1,
+    "last_used": "2026-04-11T20:10:19.533432"
+  },
+  "ask_brain:what is the premi": {
+    "action": "ask_brain",
+    "target": "what is the premi",
+    "response": "That sounds like you're starting a question about an upcoming movie or show premiere, what specifically are you curious about?",
+    "count": 1,
+    "last_used": "2026-04-11T20:10:37.021070"
+  },
+  "search_google:what is the premier league score": {
+    "action": "search_google",
+    "target": "what is the premier league score",
+    "response": "Searching for what is the premier league score now.",
+    "count": 1,
+    "last_used": "2026-04-11T20:10:55.329991"
+  },
+  "ask_brain:which team is on the top of premier league": {
+    "action": "ask_brain",
+    "target": "which team is on the top of premier league",
+    "response": "The Premier League leaderboard can be quite dynamic, but let's check the latest standings together.",
+    "count": 1,
+    "last_used": "2026-04-11T20:11:11.468794"
+  },
+  "search_google:then  it": {
+    "action": "search_google",
+    "target": "then  it",
+    "response": "Looking that up for you.",
+    "count": 1,
+    "last_used": "2026-04-11T20:11:28.868611"
+  },
+  "ask_brain:premier league top team": {
+    "action": "ask_brain",
+    "target": "premier league top team",
+    "response": "Right now, Manchester City leads the Premier League table with a strong start to the season.",
+    "count": 1,
+    "last_used": "2026-04-11T20:11:42.643606"
+  },
+  "search_google:ipl top team": {
+    "action": "search_google",
+    "target": "ipl top team",
+    "response": "I'll search for ipl top team.",
+    "count": 1,
+    "last_used": "2026-04-11T20:11:58.751208"
+  },
+  "ask_brain:what are the repositories in my getup": {
+    "action": "ask_brain",
+    "target": "what are the repositories in my getup",
+    "response": "I think you might have meant \"repos\" instead of \"repositories.\" If that's the case, I can help you out with that. What would you like to do with them? Clone a new project, check for updates, or something else?",
+    "count": 1,
+    "last_used": "2026-04-11T20:12:52.130972"
+  },
+  "ask_brain:what repositories do you see on my screen": {
+    "action": "ask_brain",
+    "target": "what repositories do you see on my screen",
+    "response": "On your screen right now, I don't have access to know which repositories are visible to me. Can you tell me more about where you are looking?",
+    "count": 1,
+    "last_used": "2026-04-11T20:13:15.550729"
+  },
+  "ask_brain:what's on my screen": {
+    "action": "ask_brain",
+    "target": "what's on my screen",
+    "response": "On your screen, there might be various apps or open tabs \u2013 let me know which one specifically you're asking about!",
+    "count": 1,
+    "last_used": "2026-04-11T20:13:37.590844"
+  },
+  "ask_brain:github tab": {
+    "action": "ask_brain",
+    "target": "github tab",
+    "response": "On the GitHub tab, you should see your repositories and maybe some recent activity. How can I assist with something specific here?",
+    "count": 1,
+    "last_used": "2026-04-11T20:13:57.805924"
+  },
+  "ask_brain:what repositories": {
+    "action": "ask_brain",
+    "target": "what repositories",
+    "response": "I see that you have the `XSTonyStarkAlassistantproject` repository open from GitHub. Let me know if you need any assistance with that specific project!",
+    "count": 1,
+    "last_used": "2026-04-11T20:18:23.496651"
+  },
+  "search_google:which team is": {
+    "action": "search_google",
+    "target": "which team is",
+    "response": "Searching for which team is now.",
+    "count": 1,
+    "last_used": "2026-04-11T20:19:16.270457"
+  },
+  "search_google:which team is top of ipl": {
+    "action": "search_google",
+    "target": "which team is top of ipl",
+    "response": "Let me find that for you.",
+    "count": 1,
+    "last_used": "2026-04-11T20:19:28.712221"
+  },
+  "open_world_monitor": {
+    "action": "open_world_monitor",
+    "target": null,
+    "response": "World Monitor is now open boss.",
+    "count": 2,
+    "last_used": "2026-04-11T20:39:24.091850"
+  },
+  "search_youtube:live streams available right now": {
+    "action": "search_youtube",
+    "target": "live streams available right now",
+    "response": "Searching YouTube for live streams available right now boss.",
+    "count": 1,
+    "last_used": "2026-04-11T20:41:03.631396"
+  },
+  "search_youtube:total gaming live stream": {
+    "action": "search_youtube",
+    "target": "total gaming live stream",
+    "response": "Searching YouTube for total gaming live stream boss.",
+    "count": 1,
+    "last_used": "2026-04-11T20:41:20.918897"
+  },
+  "world_briefing": {
+    "action": "world_briefing",
+    "target": null,
+    "response": "Here's what's happening in the world boss. Artemis crew home safely after completing historic mission to the Moon. Final push for votes as challenger to Hungary's Orb\u00e1n senses victory. Frontrunner for California governor denies sexual assault allegations. I've opened the World Monitor so you can visualize it boss.",
+    "count": 4,
+    "last_used": "2026-04-11T21:13:44.786310"
+  },
+  "search_youtube:gamer fleet in": {
+    "action": "search_youtube",
+    "target": "gamer fleet in",
+    "response": "Searching YouTube for gamer fleet in boss.",
+    "count": 1,
+    "last_used": "2026-04-11T21:13:23.388395"
   }
 }

@@ -1,6 +1,6 @@
 import requests
 import json
-from memory.learning import get_cached_command, cache_command
+from memory.memory import get_cached_command, cache_command
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "qwen2.5:3b"
@@ -43,7 +43,7 @@ def ask_brain(user_input):
             "system": SYSTEM_PROMPT,
             "stream": False,
             "options": {
-                "num_predict": 80,
+                "num_predict": 120,
                 "temperature": 0.8,
                 "top_p": 0.9,
                 "stop": ["\nUser:", "\nBoss:"]

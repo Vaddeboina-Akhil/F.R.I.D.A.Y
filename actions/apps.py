@@ -22,7 +22,6 @@ COMMON_APPS = {
     "powerpoint": "powerpnt.exe",
     "vlc": "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe",
     "steam": "C:\\Program Files (x86)\\Steam\\steam.exe",
-    "github": "C:\\Users\\akhil\\AppData\\Local\\GitHubDesktop\\GitHubDesktop.exe",
     "github desktop": "C:\\Users\\akhil\\AppData\\Local\\GitHubDesktop\\GitHubDesktop.exe",
     "notion": "C:\\Users\\akhil\\AppData\\Local\\Programs\\Notion\\Notion.exe",
     "postman": "C:\\Users\\akhil\\AppData\\Local\\Postman\\Postman.exe",
@@ -34,7 +33,29 @@ COMMON_APPS = {
 def open_app(app_name):
     """Open an application by name with smart dynamic detection"""
     try:
+        import webbrowser
+        
+        BROWSER_APPS = {
+            "github": "https://github.com",
+            "netflix": "https://netflix.com", 
+            "instagram": "https://instagram.com",
+            "twitter": "https://twitter.com",
+            "linkedin": "https://linkedin.com",
+            "reddit": "https://reddit.com",
+            "amazon": "https://amazon.in",
+            "flipkart": "https://flipkart.com",
+            "perplexity": "https://perplexity.ai",
+            "gemini": "https://gemini.google.com",
+            "claude": "https://claude.ai",
+            "chatgpt": "https://chatgpt.com"
+        }
+        
         app_lower = app_name.lower().strip()
+        
+        # Browser apps - open URLs directly
+        if app_lower in BROWSER_APPS:
+            webbrowser.open(BROWSER_APPS[app_lower])
+            return True
         
         # Step 1: Check COMMON_APPS dictionary as quick lookup cache
         if app_lower in COMMON_APPS:

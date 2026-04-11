@@ -293,3 +293,26 @@ def clear_memory():
     except Exception as e:
         print(f"Error clearing memory: {e}")
         return False
+
+
+def get_all_facts():
+    """Get all stored facts as a list"""
+    try:
+        facts = load_facts()
+        return [v.get("text", k) for k, v in facts.items()]
+    except:
+        return []
+
+
+def load_memory():
+    """Load complete memory state including user info and conversation data"""
+    cache = load_cache()
+    return {
+        "user": {
+            "name": None,
+            "city": None,
+            "preferences": [],
+            "facts": get_all_facts()
+        },
+        "conversation_count": len(cache)
+    }

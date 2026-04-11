@@ -1,14 +1,18 @@
 import time
+import datetime
 import random
 from voice.tts import speak_streaming
 from voice.stt import listen
 from voice.wake_word import listen_for_wake_word, is_wake_word
 from brain.ollama import ask_brain, is_ollama_running
 from brain.command_parser import parse_command
-from memory.learning import cache_command, log_failure, get_most_used_commands, remember_fact, recall_facts, clear_memory
+from memory.memory import cache_command, log_failure, get_most_used_commands, remember_fact, recall_facts, clear_memory
+from memory.memory import load_memory
 from actions.apps import open_app
 from actions.web import (open_url, search_google, search_youtube, 
                          open_world_monitor, open_claude, open_chatgpt, open_and_search)
+from actions.web_reader import search_and_read
+from actions.news_reader import get_greeting, get_world_briefing, get_india_briefing, get_news_by_topic
 from actions.system import (get_time, get_date, get_battery, take_screenshot, 
                             shutdown_pc, restart_pc)
 
@@ -140,22 +144,68 @@ def execute_command(command, original_text=""):
         
         # Search Google
         elif action == "search_google":
-            search_google(target)
-            response = get_response("search_google", target=target)
+            result = search_and_read(target)
+            if result:
+                response = f"According to Google: {result}"
+            else:
+                search_google(target)
+                response = f"I've opened Google results for {target} boss."
         
         # Search YouTube
         elif action == "search_youtube":
             search_youtube(target)
-            response = get_response("search_youtube", target=target)
+            response = f"Searching YouTube for {target} boss."
         
         # Open and Search (combined action)
         elif action == "open_and_search":
             response = open_and_search(target)
         
+        # World news briefing
+        elif action == "world_briefing":
+            speak_streaming("Give me a second boss, let me check...")
+            data = get_world_briefing()
+            open_world_monitor()
+            
+            # Build prompt for Ollama to deliver briefing in FRIDAY's style
+            prompt = f"""You are FRIDAY from Iron Man. Deliver this world news briefing 
+in your signature style - confident, sharp, slightly dramatic like a real 
+intelligence briefing. Make it sound like you actually care about what's 
+happening. Keep it under 4 sentences total. 
+Global headlines: {data['raw']}
+India headlines: {data['india_raw']}
+Deliver the briefing now:"""
+            
+            response = ask_brain(prompt)
+            response += " I've opened the World Monitor so you can track it visually boss."
+        
+        # India news briefing
+        elif action == "india_briefing":
+            speak_streaming("Checking India news boss...")
+            data = get_india_briefing()
+            
+            # Build prompt for Ollama to deliver India briefing
+            prompt = f"""You are FRIDAY from Iron Man. Deliver this India news briefing 
+in your signature style. Sharp, confident, 3 sentences max.
+Headlines: {data['raw']}
+Deliver now:"""
+            
+            response = ask_brain(prompt)
+        # News by topic
+        elif action == "get_news_topic":
+            headlines = get_news_by_topic(target)
+            if not headlines:
+                response = "Couldn't fetch that news boss."
+            else:
+                response = f"Here's the latest on {target} boss. "
+                for headline in headlines:
+                    response += f"{headline}. "
+                response = response.strip()
+        
         # Open World Monitor
         elif action == "open_world_monitor":
+            speak_streaming("Opening World Monitor boss.")
             open_world_monitor()
-            response = get_response("open_world_monitor")
+            response = "World Monitor is now open boss."
         
         # Get time
         elif action == "get_time":
@@ -253,17 +303,23 @@ def execute_command(command, original_text=""):
         elif action == "whats_on_screen":
             raw_text = get_current_screen()
             
-            # Check if screen text is empty
-            if not raw_text:
-                return "I cannot see anything clearly boss."
+            # Check if screen text is empty or too short
+            if not raw_text or len(raw_text) < 20:
+                return "I cannot see anything clearly on your screen boss."
             
-            # Clean raw_text: normalize whitespace and limit to 600 chars
-            clean = ' '.join(raw_text.split())[:600]
+            # Clean raw_text: normalize whitespace and limit to 800 chars
+            clean = ' '.join(raw_text.split())[:800]
             
-            # Send to AI with FRIDAY character prompt for screen analysis
-            prompt = f"""You are FRIDAY, Iron Man's AI assistant. Analyze this screen content and give a smart 2 sentence summary. 
-Identify: what app/website is open, what content is visible, what the user might be doing.
-Be specific with names you can see. Sound like FRIDAY not a robot.
+            # Send to AI with detailed FRIDAY character prompt for screen analysis
+            prompt = f"""You are FRIDAY, Iron Man's AI assistant.
+Analyze this screen content carefully.
+The user has multiple browser tabs open - focus ONLY on the ACTIVE/CURRENT tab content.
+Ignore tab names at the top, focus on the main page content below.
+Identify: exact website, specific content like repo names, scores, headlines, video titles.
+If GitHub: list actual repository names visible in main content area.
+If YouTube: list actual video titles visible.
+Be specific and accurate. Do not guess. Only mention what you can clearly see.
+Keep response to 2 sentences max.
 Screen content: {clean}"""
             response = ask_brain(prompt)
             
@@ -318,8 +374,19 @@ def main():
         speak_streaming("Ollama is not running. Please start Ollama.")
         return
     
-    # Greeting
-    speak_streaming("FRIDAY online. How can I help you boss?")
+    # Load memory and get greeting
+    memory = load_memory()
+    greeting = get_greeting()
+    hour = datetime.datetime.now().hour
+    user_name = memory["user"].get("name", "boss")
+    
+    # Smart greeting based on time and context
+    if hour >= 22 or hour < 5:
+        speak_streaming(f"{greeting} boss. You're awake late tonight. What are you up to?")
+    elif memory["conversation_count"] > 0:
+        speak_streaming(f"{greeting} boss. Welcome back. How can I help you today?")
+    else:
+        speak_streaming(f"FRIDAY online. {greeting} boss. How can I help you?")
     
     # Start screen monitoring
     start_monitoring(interval=2)

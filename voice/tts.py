@@ -36,7 +36,6 @@ async def _speak_async(text):
 def speak(text):
     """Speak the given text using FRIDAY voice synchronously"""
     try:
-        print(f"FRIDAY: {text}")
         asyncio.run(_speak_async(text))
     except Exception:
         pass
@@ -45,8 +44,6 @@ def speak(text):
 def speak_background(text):
     """Speak the given text using FRIDAY voice in a background thread"""
     try:
-        print(f"FRIDAY: {text}")
-        
         def run_async():
             asyncio.run(_speak_async(text))
         
@@ -57,13 +54,8 @@ def speak_background(text):
 
 
 def speak_streaming(text):
-    """Speak text with max 150 characters for faster playback"""
+    """Speak the full text without any character limit"""
     try:
-        # Trim text to 150 characters max
-        if len(text) > 150:
-            text = text[:150]
-        
-        # Speak the full text
         asyncio.run(_speak_async(text))
     except Exception:
         pass
