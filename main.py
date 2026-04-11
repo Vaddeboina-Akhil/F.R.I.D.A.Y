@@ -1,7 +1,7 @@
 import time
 import datetime
 import random
-from voice.tts import speak_streaming
+from voice.tts import speak_streaming, speak
 from voice.stt import listen
 from voice.wake_word import listen_for_wake_word, is_wake_word
 from brain.ollama import ask_brain, is_ollama_running
@@ -9,6 +9,8 @@ from brain.command_parser import parse_command
 from memory.memory import cache_command, log_failure, get_most_used_commands, remember_fact, recall_facts, clear_memory
 from memory.memory import load_memory
 from actions.apps import open_app
+from actions.whatsapp import send_message_to_contact
+from actions.email_sender import send_email_to_contact
 from actions.web import (open_url, search_google, search_youtube, 
                          open_world_monitor, open_claude, open_chatgpt, open_and_search)
 from actions.web_reader import search_and_read
@@ -206,6 +208,38 @@ Deliver now:"""
             speak_streaming("Opening World Monitor boss.")
             open_world_monitor()
             response = "World Monitor is now open boss."
+        
+        # Send WhatsApp message
+        elif action == "send_whatsapp":
+            parts = target.split("|")
+            contact = parts[0].strip() if len(parts) > 0 else ""
+            message = parts[1].strip() if len(parts) > 1 else "Hello"
+            
+            if not contact:
+                response = "Who should I send the message to boss?"
+            else:
+                speak(f"Sending WhatsApp message to {contact} boss.")
+                success, msg = send_message_to_contact(contact, message)
+                response = msg
+        
+        # Send email
+        elif action == "send_email":
+            parts = target.split("|")
+            contact = parts[0].strip() if len(parts) > 0 else ""
+            subject = parts[1].strip() if len(parts) > 1 else "Message from FRIDAY"
+            body = parts[2].strip() if len(parts) > 2 else ""
+            
+            if not contact:
+                response = "Who should I send the email to boss?"
+            else:
+                speak(f"Sending email to {contact} boss.")
+                success, msg = send_email_to_contact(contact, subject, body)
+                response = msg
+        
+        # Open WhatsApp
+        elif action == "open_whatsapp":
+            open_app("whatsapp")
+            response = "Opening WhatsApp boss."
         
         # Get time
         elif action == "get_time":

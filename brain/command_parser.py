@@ -192,6 +192,57 @@ def parse_command(text):
             if any(sport in text for sport in SPORT_WORDS):
                 return {"action": "search_google", "target": text}
         
+        # ===== CHECK 13: Send WhatsApp Message =====
+        if "send whatsapp" in text or ("whatsapp" in text and "message" in text) or ("message" in text and "send" in text):
+            # Extract contact (word after "to")
+            contact = ""
+            message = ""
+            
+            if " to " in text:
+                after_to = text.split(" to ", 1)[1]
+                # Find the break point (saying, that, message)
+                for break_word in ["saying", "that", "message"]:
+                    if f" {break_word} " in after_to:
+                        contact = after_to.split(f" {break_word} ", 1)[0].strip()
+                        message = after_to.split(f" {break_word} ", 1)[1].strip()
+                        break
+                
+                if not message and " " in after_to:
+                    # If no break word found, take first word as contact, rest as message
+                    parts = after_to.split(" ", 1)
+                    contact = parts[0].strip()
+                    message = parts[1].strip() if len(parts) > 1 else ""
+            
+            if contact and message:
+                return {"action": "send_whatsapp", "target": f"{contact}|{message}"}
+        
+        # ===== CHECK 14: Send Email =====
+        if "send email" in text or ("email" in text and "send" in text):
+            contact = ""
+            subject = "Message from FRIDAY"
+            body = ""
+            
+            if " to " in text:
+                after_to = text.split(" to ", 1)[1]
+                contact = after_to.split()[0].strip() if after_to else ""
+                
+                # Extract subject
+                if " subject " in text:
+                    subject_part = text.split(" subject ", 1)[1]
+                    subject = subject_part.split()[0] if subject_part else "Message from FRIDAY"
+                
+                # Extract body (text after "saying", "body", or "message")
+                for body_word in ["saying", "body", "message"]:
+                    if f" {body_word} " in text:
+                        body = text.split(f" {body_word} ", 1)[1].strip()
+                        break
+            
+            if contact and body:
+                return {"action": "send_email", "target": f"{contact}|{subject}|{body}"}
+        
+        # ===== CHECK 15: Open/Check WhatsApp =====
+        if "read whatsapp" in text or "check whatsapp" in text or "any messages" in text:
+            return {"action": "open_whatsapp", "target": None}
 
         
         # ===== DEFAULT: Pass to Brain =====
