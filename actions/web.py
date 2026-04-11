@@ -7,6 +7,9 @@ WORLD_MONITOR_URL = "https://www.worldmonitor.app/?lat=20.0000&lon=0.0000&zoom=1
 # Brave browser path on Windows
 BRAVE_PATH = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
 
+# Chrome browser path on Windows
+CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+
 # Flag to track if Brave registration was attempted
 _brave_registered = False
 
@@ -43,7 +46,7 @@ def open_url(url):
     Open a URL in the appropriate browser.
     
     Special handling:
-    - YouTube → Opens in Brave browser (if available, otherwise default)
+    - YouTube → Opens in Brave browser directly via subprocess
     - Other URLs → Opens in default browser
     
     Args:
@@ -68,22 +71,13 @@ def open_url(url):
             # Add https if not present
             url = f"https://{url}"
         
-        # YouTube special handling: Use Brave browser
+        # YouTube special handling: Use Brave browser directly
         if "youtube" in url.lower():
-            if _register_brave_browser():
-                # Try to use Brave browser
-                try:
-                    brave = webbrowser.get('brave')
-                    brave.open(url)
-                    return True
-                except Exception as e:
-                    print(f"Error opening with Brave: {e}. Falling back to default browser.")
-                    # Fallback to default browser if Brave fails
-                    webbrowser.open(url)
-                    return True
+            if os.path.exists(BRAVE_PATH):
+                subprocess.Popen([BRAVE_PATH, url])
+                return True
             else:
-                # Brave not available, use default browser
-                print("Brave browser not available. Using default browser for YouTube.")
+                print(f"Brave browser not found at {BRAVE_PATH}")
                 webbrowser.open(url)
                 return True
         else:
@@ -110,7 +104,7 @@ def search_google(query):
 def search_youtube(query):
     """
     Search YouTube for a query.
-    Uses Brave browser for YouTube searches (if available).
+    Uses Brave browser directly via subprocess.
     
     Args:
         query: Search query string
@@ -121,18 +115,12 @@ def search_youtube(query):
     try:
         url = f"https://www.youtube.com/results?search_query={query.replace(' ', '+')}"
         
-        # YouTube is special - use Brave browser
-        if _register_brave_browser():
-            try:
-                brave = webbrowser.get('brave')
-                brave.open(url)
-                return True
-            except Exception as e:
-                print(f"Error opening YouTube search with Brave: {e}. Falling back to default browser.")
-                webbrowser.open(url)
-                return True
+        # Open YouTube search in Brave browser directly
+        if os.path.exists(BRAVE_PATH):
+            subprocess.Popen([BRAVE_PATH, url])
+            return True
         else:
-            # Fallback to default browser
+            print(f"Brave browser not found at {BRAVE_PATH}")
             webbrowser.open(url)
             return True
         
@@ -169,3 +157,51 @@ def open_chatgpt():
     except Exception as e:
         print(f"Error opening ChatGPT: {e}")
         return False
+
+
+def open_and_search(target):
+    """
+    Open a browser and search for a query on YouTube.
+    
+    Parses target in format "app_name|query" and opens the appropriate
+    browser (Brave or Chrome) with YouTube search results.
+    
+    Args:
+        target: Target string in format "app_name|query"
+               (e.g., "brave|python tutorial", "chrome|mrbeast videos")
+        
+    Returns:
+        String describing the action taken
+        
+    Examples:
+        open_and_search("brave|python tutorial")
+        open_and_search("chrome|mrbeast")
+        open_and_search("|gaming") - defaults to brave
+    """
+    try:
+        # STEP 1: Split target by pipe separator
+        parts = target.split("|")
+        app_name = parts[0].strip().lower() if len(parts) > 0 else "brave"
+        query = parts[1].strip() if len(parts) > 1 else ""
+        
+        # Default to brave if app_name is empty
+        if not app_name:
+            app_name = "brave"
+        
+        # STEP 2: Build YouTube search URL
+        url = f"https://www.youtube.com/results?search_query={query.replace(' ', '+')}"
+        
+        # STEP 3: Route to appropriate browser
+        if "brave" in app_name:
+            subprocess.Popen([BRAVE_PATH, url])
+        elif "chrome" in app_name:
+            subprocess.Popen([CHROME_PATH, url])
+        else:
+            # Default to Brave for unknown browsers
+            subprocess.Popen([BRAVE_PATH, url])
+        
+        return f"Opening browser and searching for {query} boss."
+    
+    except Exception as e:
+        print(f"Error in open_and_search: {e}")
+        return f"Error performing search: {str(e)}"

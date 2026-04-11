@@ -17,8 +17,8 @@ def listen_for_wake_word():
         try:
             print("Recording 3 seconds...")
             
-            # Record 3 seconds of audio
-            audio = sounddevice.rec(int(3 * 16000), samplerate=16000, channels=1, dtype='int16')
+            # Record 3 seconds of audio from ASUS AI Noise-cancelling input (device 3)
+            audio = sounddevice.rec(int(3 * 16000), samplerate=16000, channels=1, dtype='int16', device=1)
             sounddevice.wait()
             
             # Create temp file

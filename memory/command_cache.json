@@ -82,8 +82,8 @@
     "action": "open_url",
     "target": "youtube",
     "response": "Opening youtube.",
-    "count": 7,
-    "last_used": "2026-04-11T18:13:10.554834"
+    "count": 12,
+    "last_used": "2026-04-11T19:43:04.040208"
   },
   "open_app:youtube": {
     "action": "open_app",
@@ -91,5 +91,110 @@
     "response": "Got it. Starting youtube.",
     "count": 2,
     "last_used": "2026-04-11T18:08:44.648198"
+  },
+  "click_text:youtube": {
+    "action": "click_text",
+    "target": "youtube",
+    "response": "Clicked on youtube",
+    "count": 1,
+    "last_used": "2026-04-11T18:36:19.253373"
+  },
+  "search_google:se rch": {
+    "action": "search_google",
+    "target": "se rch",
+    "response": "Searching for se rch now.",
+    "count": 1,
+    "last_used": "2026-04-11T18:36:50.491210"
+  },
+  "open_url:se rch python tutori ls in youtube": {
+    "action": "open_url",
+    "target": "se rch python tutori ls in youtube",
+    "response": "Taking you to se rch python tutori ls in youtube.",
+    "count": 1,
+    "last_used": "2026-04-11T18:37:10.591976"
+  },
+  "search_google:se rch mrbe st": {
+    "action": "search_google",
+    "target": "se rch mrbe st",
+    "response": "I'll search for se rch mrbe st.",
+    "count": 1,
+    "last_used": "2026-04-11T18:51:21.169278"
+  },
+  "open_url:se rch mr be st in youtube": {
+    "action": "open_url",
+    "target": "se rch mr be st in youtube",
+    "response": "Taking you to se rch mr be st in youtube.",
+    "count": 1,
+    "last_used": "2026-04-11T18:51:38.358706"
+  },
+  "search_google:python tutori ls": {
+    "action": "search_google",
+    "target": "python tutori ls",
+    "response": "I'll search for python tutori ls.",
+    "count": 3,
+    "last_used": "2026-04-11T19:20:30.467976"
+  },
+  "open_url:youtube nd python tutori ls": {
+    "action": "open_url",
+    "target": "youtube nd python tutori ls",
+    "response": "Opening youtube nd python tutori ls.",
+    "count": 1,
+    "last_used": "2026-04-11T19:14:17.162041"
+  },
+  "search_google:python": {
+    "action": "search_google",
+    "target": "python",
+    "response": "I'll search for python.",
+    "count": 2,
+    "last_used": "2026-04-11T19:19:59.872411"
+  },
+  "search_google:python tut": {
+    "action": "search_google",
+    "target": "python tut",
+    "response": "Searching Google for python tut.",
+    "count": 1,
+    "last_used": "2026-04-11T19:20:10.363840"
+  },
+  "ask_brain": {
+    "action": "ask_brain",
+    "target": null,
+    "response": "Hey there! What can I help with MrBeast today? Maybe some interesting facts or his latest video stats?",
+    "count": 5,
+    "last_used": "2026-04-11T19:42:42.532371"
+  },
+  "ask_brain:for mrbeast": {
+    "action": "ask_brain",
+    "target": "for mrbeast",
+    "response": "Hey there! What can I help with MrBeast today? Maybe some interesting facts or his latest video stats?",
+    "count": 1,
+    "last_used": "2026-04-11T19:20:53.571815"
+  },
+  "open_app:br ve d mrbe st": {
+    "action": "open_app",
+    "target": "br ve d mrbe st",
+    "response": "Opening br ve d mrbe st now.",
+    "count": 1,
+    "last_used": "2026-04-11T19:21:37.910952"
+  },
+  "ask_brain:a": {
+    "action": "ask_brain",
+    "target": "a",
+    "response": "Hey there! What can I help with today? Or did you just type 'a'?",
+    "count": 1,
+    "last_used": "2026-04-11T19:28:51.109236"
+  },
+  "search_google:se rch python tutori ls": {
+    "action": "search_google",
+    "target": "se rch python tutori ls",
+    "response": "Searching Google for se rch python tutori ls.",
+    "count": 1,
+    "last_used": "2026-04-11T19:43:15.388393"
+  },
+  "open_url:youtube d se rch python tutori ls": {
+    "action": "open_url",
+    "target": "youtube d se rch python tutori ls",
+    "response": "Opening youtube d se rch python tutori ls for you.",
+    "count": 1,
+    "last_used": "2026-04-11T19:43:37.444150"
   }
 }

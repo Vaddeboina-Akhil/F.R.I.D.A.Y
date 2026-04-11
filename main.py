@@ -8,9 +8,12 @@ from brain.command_parser import parse_command
 from memory.learning import cache_command, log_failure, get_most_used_commands, remember_fact, recall_facts, clear_memory
 from actions.apps import open_app
 from actions.web import (open_url, search_google, search_youtube, 
-                         open_world_monitor, open_claude, open_chatgpt)
+                         open_world_monitor, open_claude, open_chatgpt, open_and_search)
 from actions.system import (get_time, get_date, get_battery, take_screenshot, 
-                            shutdown_pc, restart_pc, click_text, find_text_on_screen)
+                            shutdown_pc, restart_pc)
+
+from actions.screen import click_text, find_text_on_screen, get_screen_text, scroll_down, scroll_up, type_text, press_key
+from actions.screen_monitor import start_monitoring, stop_monitoring, get_current_screen, is_text_on_screen
 
 
 # Response variations for natural, conversational feel
@@ -145,6 +148,10 @@ def execute_command(command, original_text=""):
             search_youtube(target)
             response = get_response("search_youtube", target=target)
         
+        # Open and Search (combined action)
+        elif action == "open_and_search":
+            response = open_and_search(target)
+        
         # Open World Monitor
         elif action == "open_world_monitor":
             open_world_monitor()
@@ -168,7 +175,35 @@ def execute_command(command, original_text=""):
         
         # Click text on screen using OCR
         elif action == "click_text":
-            response = click_text(target)
+            success, msg = click_text(target)
+            return msg
+        
+        # Read screen text using OCR
+        elif action == "read_screen":
+            text = get_screen_text()
+            if not text:
+                return "I cannot read anything on screen boss."
+            return f"{text[:200]}...that's what I can see boss."
+        
+        # Scroll down
+        elif action == "scroll_down":
+            scroll_down()
+            return "Scrolling down boss."
+        
+        # Scroll up
+        elif action == "scroll_up":
+            scroll_up()
+            return "Scrolling up boss."
+        
+        # Type text
+        elif action == "type_text":
+            type_text(target)
+            return f"Typed {target} boss."
+        
+        # Press key
+        elif action == "press_key":
+            press_key(target)
+            return f"Pressed {target} boss."
         
         # Shutdown PC
         elif action == "shutdown_pc":
@@ -214,6 +249,44 @@ def execute_command(command, original_text=""):
             else:
                 response = get_response("recall_memory_none")
         
+        # What's on screen - with AI analysis
+        elif action == "whats_on_screen":
+            raw_text = get_current_screen()
+            
+            # Check if screen text is empty
+            if not raw_text:
+                return "I cannot see anything clearly boss."
+            
+            # Clean raw_text: normalize whitespace and limit to 600 chars
+            clean = ' '.join(raw_text.split())[:600]
+            
+            # Send to AI with FRIDAY character prompt for screen analysis
+            prompt = f"""You are FRIDAY, Iron Man's AI assistant. Analyze this screen content and give a smart 2 sentence summary. 
+Identify: what app/website is open, what content is visible, what the user might be doing.
+Be specific with names you can see. Sound like FRIDAY not a robot.
+Screen content: {clean}"""
+            response = ask_brain(prompt)
+            
+            return response
+        
+        # Is text visible on screen
+        elif action == "is_text_visible":
+            result = is_text_on_screen(target)
+            if result:
+                return f"Yes boss, I can see {target} on screen"
+            else:
+                return f"No boss, I cannot see {target} on screen"
+        
+        # Start screen monitoring
+        elif action == "start_monitoring":
+            start_monitoring(interval=2)
+            return "Screen monitoring started boss."
+        
+        # Stop screen monitoring
+        elif action == "stop_monitoring":
+            stop_monitoring()
+            return "Screen monitoring stopped boss."
+        
         # Ask brain (default conversation)
         elif action == "ask_brain":
             response = ask_brain(target)
@@ -247,6 +320,10 @@ def main():
     
     # Greeting
     speak_streaming("FRIDAY online. How can I help you boss?")
+    
+    # Start screen monitoring
+    start_monitoring(interval=2)
+    print("Screen monitoring active")
     
     # Define active mode function
     def active_mode(initial_command=None):
@@ -323,5 +400,6 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
+        stop_monitoring()
         speak_streaming("Shutting down.")
         exit()

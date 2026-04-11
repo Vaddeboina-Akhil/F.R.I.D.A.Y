@@ -10,6 +10,20 @@ KNOWN_APPS = [
 # This safeguard prevents "open youtube" from becoming open_app
 WEBSITE_TARGETS = ["youtube", "google", "chatgpt", "gmail"]
 
+# YouTube-specific keywords - searches with these terms prefer YouTube
+YOUTUBE_KEYWORDS = [
+    "tutorial", "tutorials", "video", "videos", "song", "songs", "music",
+    "movie", "movies", "watch", "mrbeast", "mr beast", "shorts", "gameplay",
+    "review", "trailer", "vlog", "podcast", "anime", "funny", "comedy",
+    "stream", "streaming", "live"
+]
+
+# Google-specific keywords - searches with these terms prefer Google
+GOOGLE_KEYWORDS = [
+    "news", "weather", "price", "definition", "meaning", "who is", "what is",
+    "when did", "how much", "wikipedia", "wiki"
+]
+
 # Import intent mapper for flexible command parsing
 from brain.intent_mapper import normalize_command
 
@@ -18,6 +32,53 @@ def parse_command(text):
     """Parse user input and extract action and target"""
     try:
         text = text.lower().strip()
+        
+        # ===== PRIORITY 0: Open and Search Commands (HIGHEST PRIORITY) =====
+        # These should be checked before anything else
+        
+        # Check for "open" + "search" combination
+        if "open" in text and "search" in text:
+            app = text.split("and")[0].replace("open", "").strip()
+            query = text.split("and")[1].replace("search for", "").replace("search", "").strip() if "and" in text else ""
+            if app and query:
+                return {"action": "open_and_search", "target": f"{app}|{query}"}
+        
+        # Check for "open" + "and" combination
+        if "open" in text and "and" in text:
+            app = text.split("and")[0].replace("open", "").strip()
+            query = text.split("and")[1].replace("search for", "").replace("search", "").strip()
+            if app and query:
+                return {"action": "open_and_search", "target": f"{app}|{query}"}
+        
+        # Check if text starts with "search", "find", or "look up"
+        text_words = text.split()
+        if text_words and text_words[0] in ["search", "find", "look up"] or text.startswith("look up"):
+            # Extract query
+            if "for" in text:
+                query = text.split("for", 1)[1].strip()
+            else:
+                # Skip the first word (search/find/look)
+                if text.startswith("look up"):
+                    query = text.replace("look up", "", 1).strip()
+                else:
+                    query = text.split(None, 1)[1] if len(text_words) > 1 else ""
+            
+            query = query.strip()
+            
+            # YouTube keywords for smart routing
+            YOUTUBE_KEYWORDS = [
+                "tutorial", "tutorials", "video", "videos", "song", "songs",
+                "music", "movie", "movies", "watch", "mrbeast", "mr beast",
+                "shorts", "gameplay", "review", "trailer", "vlog", "podcast",
+                "anime", "funny", "comedy", "stream", "streaming", "live",
+                "python", "coding"
+            ]
+            
+            # If any keyword in query, search YouTube; default to YouTube
+            if any(keyword in query.lower() for keyword in YOUTUBE_KEYWORDS):
+                return {"action": "search_youtube", "target": query}
+            
+            return {"action": "search_youtube", "target": query}
         
         # ===== PRIORITY 1: Special Memory Commands (highest priority) =====
         # These are very specific and should not trigger intent mapping
@@ -52,12 +113,62 @@ def parse_command(text):
         
         # ===== PRIORITY 2: Click Command (automated UI clicking) =====
         # "click submit", "click next", "click login" → find and click text on screen
-        if text.startswith("click"):
+        if "click" in text:
             target = text.replace("click", "").strip()
             if target:
                 return {"action": "click_text", "target": target}
             else:
                 return {"action": "invalid", "target": None}
+        
+        # ===== PRIORITY 3: Screen Reading Commands =====
+        # Read current screen content using OCR
+        if "read screen" in text or "what's on screen" in text or "whats on screen" in text:
+            return {"action": "read_screen", "target": None}
+        
+        # Scroll down
+        if "scroll down" in text:
+            return {"action": "scroll_down", "target": None}
+        
+        # Scroll up
+        if "scroll up" in text:
+            return {"action": "scroll_up", "target": None}
+        
+        # Type text
+        if "type" in text:
+            target = text.replace("type", "").strip()
+            if target:
+                return {"action": "type_text", "target": target}
+            else:
+                return {"action": "invalid", "target": None}
+        
+        # Press keyboard keys
+        if "press enter" in text or "hit enter" in text:
+            return {"action": "press_key", "target": "enter"}
+        
+        
+        if "press escape" in text or "hit escape" in text:
+            return {"action": "press_key", "target": "escape"}
+        
+        # ===== PRIORITY 2: Screen Monitoring Commands =====
+        # What can you see / What do you see / What's on screen
+        if "what can you see" in text or "what do you see" in text or "whats on screen" in text or "what's on screen" in text:
+            return {"action": "whats_on_screen", "target": None}
+        
+        # Can you see / Is there (on screen)
+        if ("can you see" in text or "is there" in text) and "on screen" in text:
+            target = text.replace("can you see", "").replace("is there", "").replace("on screen", "").strip()
+            if target:
+                return {"action": "is_text_visible", "target": target}
+            else:
+                return {"action": "invalid", "target": None}
+        
+        # Start monitoring / Watch screen
+        if "start monitoring" in text or "watch screen" in text:
+            return {"action": "start_monitoring", "target": None}
+        
+        # Stop monitoring / Stop watching
+        if "stop monitoring" in text or "stop watching" in text:
+            return {"action": "stop_monitoring", "target": None}
         
         # ===== PRIORITY 3: Intent Mapping (flexible, pattern-based) =====
         # Use intent mapper for flexible command parsing
@@ -110,18 +221,6 @@ def parse_command(text):
         # World Monitor
         if any(word in text for word in ["world", "whats going on", "what's going on", "outside"]):
             return {"action": "open_world_monitor", "target": None}
-        
-        # ===== PRIORITY 4: Fallback for YouTube search (specific targeting) =====
-        # YouTube search - check after open_url to prioritize opening youtube.com
-        if "search" in text and "youtube" in text:
-            query = text
-            if "search youtube for" in text:
-                query = text.split("search youtube for")[1].strip()
-            elif "for" in text:
-                query = text.split("for")[1].strip()
-            else:
-                query = text.split("youtube")[1].strip()
-            return {"action": "search_youtube", "target": query}
         
         # ===== PRIORITY 5: Default conversation =====
         # Default: pass to brain for conversation
