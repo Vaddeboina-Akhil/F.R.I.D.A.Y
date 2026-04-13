@@ -17,8 +17,8 @@
     "action": "whatsapp_flow",
     "target": "send a message",
     "response": "Failed boss: name 'open_whatsapp' is not defined",
-    "count": 1,
-    "last_used": "2026-04-13T17:58:01.662650"
+    "count": 2,
+    "last_used": "2026-04-13T18:12:59.951540"
   },
   "whatsapp_flow:send a message to bhavana": {
     "action": "whatsapp_flow",
@@ -33,5 +33,40 @@
     "response": "Message sent to mum boss.",
     "count": 1,
     "last_used": "2026-04-13T18:10:19.058862"
+  },
+  "set_alarm:5 minutes": {
+    "action": "set_alarm",
+    "target": "5 minutes",
+    "response": "Alarm set for 05:00 boss.",
+    "count": 1,
+    "last_used": "2026-04-13T18:16:48.592568"
+  },
+  "get_time": {
+    "action": "get_time",
+    "target": null,
+    "response": "It's 6:19 PM",
+    "count": 1,
+    "last_used": "2026-04-13T18:19:01.421663"
+  },
+  "set_timer:for 5 minutes": {
+    "action": "set_timer",
+    "target": "for 5 minutes",
+    "response": "Timer set for 5 minutes boss.",
+    "count": 8,
+    "last_used": "2026-04-13T20:07:51.934210"
+  },
+  "ask_brain": {
+    "action": "ask_brain",
+    "target": null,
+    "response": "Alright, let\u2019s get this done then! What exactly need we manually handle today?",
+    "count": 1,
+    "last_used": "2026-04-13T19:03:50.180352"
+  },
+  "ask_brain:manually": {
+    "action": "ask_brain",
+    "target": "manually",
+    "response": "Alright, let\u2019s get this done then! What exactly need we manually handle today?",
+    "count": 1,
+    "last_used": "2026-04-13T19:03:50.189026"
   }
 }

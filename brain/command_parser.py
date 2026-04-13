@@ -149,8 +149,32 @@ def parse_command(text):
         if "press enter" in text:
             return {"action": "press_key", "target": "enter"}
         
-        # ===== CHECK 10: System Commands =====
-        if "time" in text:
+        # ===== CHECK 10: Timer and Alarm Commands (BEFORE time check!) =====
+        # Timer: has duration keywords (minutes, seconds, hours, etc)
+        if ("timer" in text and ("minute" in text or "second" in text or "hour" in text or "min" in text or "sec" in text or "hr" in text)):
+            duration = text.replace("set", "").replace("timer", "").replace("a", "").strip()
+            if duration:
+                return {"action": "set_timer", "target": duration}
+        
+        # Alarm: has time keywords (AM, PM, o'clock) or time pattern (digits without duration keywords)
+        if ("alarm" in text and ("am" in text or "pm" in text or "o'clock" in text or "oclock" in text)):
+            time_str = text.replace("set", "").replace("alarm", "").replace("for", "").strip()
+            if time_str:
+                return {"action": "set_alarm", "target": time_str}
+        
+        # Alarm with just time (e.g., "alarm for 7" where 7 is clearly a time)
+        if "alarm" in text:
+            time_str = text.replace("set", "").replace("alarm", "").replace("for", "").strip()
+            # Only treat as alarm if it looks like a time (has digits but no duration keywords)
+            if time_str and not any(word in time_str for word in ["minute", "second", "hour", "min", "sec", "hr"]):
+                return {"action": "set_alarm", "target": time_str}
+        
+        if "open clock" in text or "open timer" in text:
+            return {"action": "open_clock", "target": None}
+        
+        # ===== CHECK 11: System Commands =====
+        # Check time but exclude timer, alarm
+        if "time" in text and "timer" not in text and "alarm" not in text:
             return {"action": "get_time", "target": None}
         
         if "date" in text:

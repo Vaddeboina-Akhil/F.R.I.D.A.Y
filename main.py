@@ -19,7 +19,7 @@ from actions.web_reader import search_and_read
 from actions.news_reader import get_greeting, get_world_briefing, get_india_briefing, get_news_by_topic
 from actions.system import (get_time, get_date, get_battery, take_screenshot, 
                             shutdown_pc, restart_pc)
-
+from actions.clock import open_clock, set_timer, set_alarm, close_clock
 from actions.screen import click_text, find_text_on_screen, get_screen_text, scroll_down, scroll_up, type_text, press_key
 from actions.screen_monitor import start_monitoring, stop_monitoring, get_current_screen, is_text_on_screen
 
@@ -290,6 +290,24 @@ Deliver now:"""
         # Get battery
         elif action == "get_battery":
             response = get_battery()
+        
+        # Set Timer
+        elif action == "set_timer":
+            speak("Setting up timer boss.")
+            success, msg = set_timer(target)
+            response = msg
+        
+        # Set Alarm
+        elif action == "set_alarm":
+            speak("Setting up alarm boss.")
+            success, msg = set_alarm(target)
+            response = msg
+        
+        # Open Clock
+        elif action == "open_clock":
+            speak("Opening clock app boss.")
+            open_clock()
+            response = "Clock app is now open boss."
         
         # Take screenshot
         elif action == "take_screenshot":
