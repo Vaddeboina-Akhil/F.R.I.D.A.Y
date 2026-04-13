@@ -151,51 +151,62 @@ def send_whatsapp_message(contact_name, message):
         # Step 1: Open WhatsApp (if not already open)
         open_whatsapp()
         
-        # Step 2: Wait for WhatsApp to load
-        time.sleep(2)
+        # Step 2: EXTENDED WAIT for WhatsApp to fully load and UI to be ready
+        print("[DEBUG] Waiting for WhatsApp UI to load...")
+        time.sleep(6)  # INCREASED - Give WhatsApp time to fully load
         
         # Step 3: Press Ctrl+F to focus search box
+        print("[DEBUG] Pressing Ctrl+F to open search...")
         pyautogui.hotkey('ctrl', 'f')
-        time.sleep(0.5)
+        time.sleep(0.8)  # Give search box time to activate
         
         # Step 4: Select all text in search box and clear it
         pyautogui.hotkey('ctrl', 'a')
-        time.sleep(0.2)
-        
-        # Step 5: Type contact name using clipboard (more reliable)
-        pyperclip.copy(contact_name)
-        pyautogui.hotkey('ctrl', 'v')
-        print(f"[DEBUG] Searched for: {contact_name}")
-        time.sleep(2)  # Wait for search results to appear
-        
-        # Step 6: Press Down arrow to select from search results
-        pyautogui.press('down')
         time.sleep(0.3)
         
-        # Step 7: Press Enter to open the selected chat
-        pyautogui.press('enter')
-        time.sleep(1.5)
+        # Step 5: Type contact name using clipboard (more reliable)
+        print(f"[DEBUG] Pasting contact name: {contact_name}")
+        pyperclip.copy(contact_name)
+        time.sleep(0.2)
+        pyautogui.hotkey('ctrl', 'v')
+        print(f"[DEBUG] Pasted: {contact_name}")
+        time.sleep(2.5)  # Wait for search results to appear
         
-        # Step 8: Wait for chat to fully load
+        # Step 6: Press Down arrow to select from search results
+        print("[DEBUG] Selecting first search result...")
+        pyautogui.press('down')
         time.sleep(0.5)
+        
+        # Step 7: Press Enter to open the selected chat
+        print("[DEBUG] Opening chat...")
+        pyautogui.press('enter')
+        time.sleep(2)  # Wait a bit for chat selection
+        
+        # Step 8: EXTENDED WAIT for chat window/message input to fully load
+        print("[DEBUG] Waiting for chat window to fully load...")
+        time.sleep(4)  # INCREASED - Let the chat interface fully render
         
         # Step 9: Click on the message input box (bottom right area)
         # "Type a message" box coordinates
         msg_input_x, msg_input_y = 900, 732
+        print(f"[DEBUG] Clicking message input at ({msg_input_x}, {msg_input_y})")
         pyautogui.click(msg_input_x, msg_input_y)
-        print(f"[DEBUG] Clicked message input at ({msg_input_x}, {msg_input_y})")
         time.sleep(1)
         
         # Step 10: Type the message
+        print(f"[DEBUG] Typing message: {message}")
         pyperclip.copy(message)
+        time.sleep(0.2)
         pyautogui.hotkey('ctrl', 'v')
-        print(f"[DEBUG] Message typed: {message}")
-        time.sleep(0.3)
+        print(f"[DEBUG] Message pasted")
+        time.sleep(0.5)
         
         # Step 11: Press Enter to send
+        print("[DEBUG] Sending message...")
         pyautogui.press('enter')
         time.sleep(0.5)
         
+        print("[DEBUG] Message sent successfully!")
         return True, f"Message sent to {contact_name} boss."
     
     except Exception as e:

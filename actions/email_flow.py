@@ -15,6 +15,7 @@ COLLEGE_EMAIL = "23p61a05m5@vbithyd.ac.in"
 def ask(question):
     """
     Ask a question and get voice response from user.
+    With retry logic - asks twice if user doesn't respond.
     
     Args:
         question (str): Question to ask
@@ -27,8 +28,11 @@ def ask(question):
     
     response = listen()
     
-    if response is None:
-        speak("I didn't catch that, say it again boss.")
+    # If no response, retry once
+    if not response:
+        print(f"[DEBUG] No response to: {question}, retrying...")
+        speak("Say that again boss.")
+        time.sleep(0.3)
         response = listen()
     
     if response is None:

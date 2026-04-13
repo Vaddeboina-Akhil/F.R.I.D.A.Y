@@ -217,12 +217,19 @@ def parse_command(text):
         if "send" in text and "whatsapp" in text:
             return {"action": "whatsapp_flow", "target": text}
         
-        # Check 2: "message" + name + ("whatsapp" or "send")
-        if "message" in text:
+        # Check 2: "write/send a message" with contact
+        if "message" in text and ("send" in text or "write" in text):
             COMMON_NAMES = ["sai", "akhil", "john", "sarah", "mom", "dad", "brother", "sister", "friend"]
-            if any(name in text for name in COMMON_NAMES):
-                if "whatsapp" in text or "send" in text:
+            DIRECT_TARGETS = ["myself", "me", "self", "minegang", "mine gang", "mummy", "mommy", "mom"]
+            
+            # Check for direct targets first
+            for target in DIRECT_TARGETS:
+                if target in text:
                     return {"action": "whatsapp_flow", "target": text}
+            
+            # Then check common names
+            if any(name in text for name in COMMON_NAMES):
+                return {"action": "whatsapp_flow", "target": text}
         
         # Check 3: "whatsapp" without "open" or "close"
         if "whatsapp" in text and "open" not in text and "close" not in text:
