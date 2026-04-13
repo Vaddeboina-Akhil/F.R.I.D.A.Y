@@ -10,6 +10,18 @@ import os
 import webbrowser
 
 
+# Contact name aliases for easier voice commands
+CONTACT_ALIASES = {
+    "myself": "+91 93925 24228 (You)",
+    "my own number": "+91 93925 24228 (You)",
+    "my number": "+91 93925 24228 (You)",
+    "me": "+91 93925 24228 (You)",
+    "personal": "+91 93925 24228 (You)",
+    "minegang": "Minegang",
+    "mine gang": "Minegang",
+}
+
+
 # Tesseract OCR path
 TESSERACT_PATH = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
@@ -130,51 +142,74 @@ def send_whatsapp_message(contact_name, message):
         tuple: (success: bool, response: str)
     """
     try:
+        # Step 0: Map contact aliases to actual contact names
+        contact_lower = contact_name.lower().strip()
+        if contact_lower in CONTACT_ALIASES:
+            contact_name = CONTACT_ALIASES[contact_lower]
+            print(f"[DEBUG] Mapped '{contact_lower}' to '{contact_name}'")
+        
         # Step 1: Open WhatsApp (if not already open)
         open_whatsapp()
         
         # Step 2: Wait for WhatsApp to load
         time.sleep(2)
         
-        # Step 3: Click on search box (top left area)
-        search_box_x, search_box_y = 240, 117  # Coordinates of "Search or start a new chat" box
-        pyautogui.click(search_box_x, search_box_y)
+        # Step 3: Press Ctrl+F to focus search box
+        pyautogui.hotkey('ctrl', 'f')
         time.sleep(0.5)
         
-        # Step 4: Clear any existing text and type contact name
+        # Step 4: Select all text in search box and clear it
         pyautogui.hotkey('ctrl', 'a')
         time.sleep(0.2)
+        
+        # Step 5: Type contact name using clipboard (more reliable)
         pyperclip.copy(contact_name)
         pyautogui.hotkey('ctrl', 'v')
-        time.sleep(1.5)
+        print(f"[DEBUG] Searched for: {contact_name}")
+        time.sleep(2)  # Wait for search results to appear
         
-        # Step 5: Press Enter to select the first result
+        # Step 6: Press Down arrow to select from search results
+        pyautogui.press('down')
+        time.sleep(0.3)
+        
+        # Step 7: Press Enter to open the selected chat
         pyautogui.press('enter')
         time.sleep(1.5)
         
-        # Step 6: Click on the message input box (bottom right area)
-        msg_input_x, msg_input_y = 900, 732  # Coordinates of "Type a message" box
-        pyautogui.click(msg_input_x, msg_input_y)
+        # Step 8: Wait for chat to fully load
         time.sleep(0.5)
         
-        # Step 7: Type the message
+        # Step 9: Click on the message input box (bottom right area)
+        # "Type a message" box coordinates
+        msg_input_x, msg_input_y = 900, 732
+        pyautogui.click(msg_input_x, msg_input_y)
+        print(f"[DEBUG] Clicked message input at ({msg_input_x}, {msg_input_y})")
+        time.sleep(1)
+        
+        # Step 10: Type the message
         pyperclip.copy(message)
         pyautogui.hotkey('ctrl', 'v')
+        print(f"[DEBUG] Message typed: {message}")
         time.sleep(0.3)
         
-        # Step 8: Press Enter to send
+        # Step 11: Press Enter to send
         pyautogui.press('enter')
         time.sleep(0.5)
         
         return True, f"Message sent to {contact_name} boss."
     
     except Exception as e:
+        print(f"[ERROR] WhatsApp error: {str(e)}")
         return False, f"Failed boss: {str(e)}"
 
 
-def send_whatsapp_flow():
+def send_whatsapp_flow(initial_command=""):
     """
     Interactive flow for sending WhatsApp message using voice.
+    Smart contact detection from initial command.
+    
+    Args:
+        initial_command (str): Initial command that triggered this flow (e.g., 'to self', 'minegang')
     
     Returns:
         str: Result message
@@ -183,22 +218,39 @@ def send_whatsapp_flow():
         from voice.tts import speak
         from voice.stt import listen
         
-        # Step 1: Ask for contact
-        speak("Who should I message boss?")
-        contact = listen()
+        # Step 1: Determine contact
+        contact = None
+        
+        # Parse contact from initial command if available
+        if initial_command:
+            initial_lower = initial_command.lower().strip()
+            # Check for direct contact mentions
+            if "myself" in initial_lower or "to self" in initial_lower or "to me" in initial_lower:
+                contact = "myself"
+            elif "minegang" in initial_lower or "mine gang" in initial_lower or "mind game" in initial_lower or "my gang" in initial_lower:
+                contact = "minegang"
+            # If contact found in command, skip asking
+            if contact:
+                print(f"[DEBUG] Contact detected from command: {contact}")
+                speak(f"Messaging {contact} boss.")
+        
+        # Only ask if contact not detected from command
+        if not contact:
+            speak("Who should I message boss?")
+            contact = listen()
         
         if not contact:
             return "Couldn't hear the contact name boss."
         
         # Step 2: Ask for message
-        speak(f"What should I say to {contact} boss?")
+        speak(f"What should I say boss?")
         message = listen()
         
         if not message:
             return "Couldn't hear the message boss."
         
         # Step 3: Send message
-        speak(f"Sending message to {contact} boss.")
+        speak(f"Sending message boss.")
         success, msg = send_whatsapp_message(contact, message)
         
         return msg

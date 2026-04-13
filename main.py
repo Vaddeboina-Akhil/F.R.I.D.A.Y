@@ -251,7 +251,7 @@ Deliver now:"""
         
         # WhatsApp flow (conversational WhatsApp messaging)
         elif action == "whatsapp_flow":
-            result = send_whatsapp_flow()
+            result = send_whatsapp_flow(target)  # Pass target contact if available
             response = result
         
         # Open Gmail
