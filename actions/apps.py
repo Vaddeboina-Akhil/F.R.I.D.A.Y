@@ -190,12 +190,90 @@ def open_app(app_name):
 
 
 def close_app(app_name):
-    """Close an application by name"""
+    """
+    Close an application by name.
+    Handles multiple naming variations.
+    
+    Args:
+        app_name (str): Name of app to close
+        
+    Returns:
+        bool: True if app was closed
+    """
     try:
-        subprocess.run(["taskkill", "/f", "/im", f"{app_name}.exe"])
+        app_lower = app_name.lower().strip()
+        
+        # Map app names to process names
+        process_map = {
+            "whatsapp": "WhatsApp.Root.exe",
+            "chrome": "chrome.exe",
+            "brave": "brave.exe",
+            "edge": "msedge.exe",
+            "firefox": "firefox.exe",
+            "spotify": "spotify.exe",
+            "discord": "discord.exe",
+            "vscode": "code.exe",
+            "vs code": "code.exe",
+            "excel": "excel.exe",
+            "word": "winword.exe",
+            "powerpoint": "powerpnt.exe",
+            "telegram": "telegram.exe",
+            "steam": "steam.exe"
+        }
+        
+        # Get the process name
+        process_name = process_map.get(app_lower, f"{app_lower}.exe")
+        
+        # Kill the process
+        subprocess.run(["taskkill", "/f", "/im", process_name], 
+                      capture_output=True, text=True, timeout=5)
+        print(f"[DEBUG] Closed {app_name} ({process_name})")
         return True
+    
     except Exception as e:
-        print(f"Error closing app: {e}")
+        print(f"[DEBUG] Error closing {app_name}: {e}")
+        return False
+
+
+def close_all_apps():
+    """
+    Close all user applications except system critical apps.
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        # Apps to close
+        apps_to_close = [
+            "WhatsApp.Root.exe",
+            "chrome.exe",
+            "brave.exe",
+            "firefox.exe",
+            "msedge.exe",
+            "discord.exe",
+            "spotify.exe",
+            "code.exe",
+            "telegram.exe",
+            "slack.exe",
+            "teams.exe",
+            "vlc.exe",
+            "steam.exe",
+            "obs64.exe"
+        ]
+        
+        # Kill each app
+        for process_name in apps_to_close:
+            try:
+                subprocess.run(["taskkill", "/f", "/im", process_name], 
+                              capture_output=True, text=True, timeout=3)
+                print(f"[DEBUG] Closed {process_name}")
+            except:
+                pass  # App not running, skip
+        
+        return True
+    
+    except Exception as e:
+        print(f"[DEBUG] Error closing all apps: {e}")
         return False
 
 

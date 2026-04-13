@@ -221,21 +221,29 @@ def send_whatsapp_flow(initial_command=""):
         # Step 1: Determine contact
         contact = None
         
+        # Debug: Show what we received
+        print(f"[DEBUG] send_whatsapp_flow initial_command: '{initial_command}'")
+        
         # Parse contact from initial command if available
         if initial_command:
             initial_lower = initial_command.lower().strip()
-            # Check for direct contact mentions
-            if "myself" in initial_lower or "to self" in initial_lower or "to me" in initial_lower:
+            print(f"[DEBUG] Checking contact from: '{initial_lower}'")
+            
+            # Check for direct contact mentions (more flexible matching)
+            if any(word in initial_lower for word in ["myself", "self", "me only", "it myself"]):
                 contact = "myself"
-            elif "minegang" in initial_lower or "mine gang" in initial_lower or "mind game" in initial_lower or "my gang" in initial_lower:
+                print(f"[DEBUG] Detected 'myself' contact")
+            elif any(word in initial_lower for word in ["minegang", "mine gang", "mind game", "my gang"]):
                 contact = "minegang"
-            # If contact found in command, skip asking
-            if contact:
-                print(f"[DEBUG] Contact detected from command: {contact}")
-                speak(f"Messaging {contact} boss.")
+                print(f"[DEBUG] Detected 'minegang' contact")
         
-        # Only ask if contact not detected from command
-        if not contact:
+        # If contact found in command, skip asking
+        if contact:
+            print(f"[DEBUG] Contact detected from command: {contact}")
+            speak(f"Messaging {contact} boss.")
+        else:
+            # Only ask if contact not detected from command
+            print("[DEBUG] No contact detected, asking user")
             speak("Who should I message boss?")
             contact = listen()
         
@@ -256,6 +264,7 @@ def send_whatsapp_flow(initial_command=""):
         return msg
     
     except Exception as e:
+        print(f"[ERROR] WhatsApp flow error: {str(e)}")
         return f"WhatsApp flow error: {str(e)}"
 
 

@@ -9,7 +9,7 @@ from brain.ollama import ask_brain, is_ollama_running, correct_command
 from brain.command_parser import parse_command
 from memory.memory import cache_command, log_failure, get_most_used_commands, remember_fact, recall_facts, clear_memory, get_cached_command
 from memory.memory import load_memory
-from actions.apps import open_app
+from actions.apps import open_app, close_app, close_all_apps
 from actions.whatsapp import send_message_to_contact, send_whatsapp_flow
 from actions.email_sender import send_email_to_contact
 from actions.email_flow import run_email_flow
@@ -135,6 +135,22 @@ def execute_command(command, original_text=""):
                 response = get_response("open_app_success", target=target)
             else:
                 response = get_response("open_app_failure", target=target)
+        
+        # Close apps
+        elif action == "close_app":
+            result = close_app(target)
+            if result:
+                response = f"Closed {target} boss."
+            else:
+                response = f"Couldn't close {target} boss."
+        
+        # Close all apps
+        elif action == "close_all_apps":
+            result = close_all_apps()
+            if result:
+                response = "Closed all apps boss."
+            else:
+                response = "Error closing apps boss."
         
         # Open URLs
         elif action == "open_url":

@@ -37,6 +37,15 @@ def parse_command(text):
     try:
         text = text.lower().strip()
         
+        # ===== CHECK 0: Close App Commands (HIGHEST PRIORITY) =====
+        if "close" in text:
+            if "close all" in text:
+                return {"action": "close_all_apps", "target": None}
+            # Extract app name after "close"
+            target = text.replace("close", "").strip()
+            if target:
+                return {"action": "close_app", "target": target}
+        
         # ===== CHECK 1: Open + And + Search (HIGHEST PRIORITY) =====
         if "open" in text and "and" in text and "search" in text:
             parts = text.split("and", 1)
@@ -215,8 +224,8 @@ def parse_command(text):
                 if "whatsapp" in text or "send" in text:
                     return {"action": "whatsapp_flow", "target": text}
         
-        # Check 3: "whatsapp" without "open"
-        if "whatsapp" in text and "open" not in text:
+        # Check 3: "whatsapp" without "open" or "close"
+        if "whatsapp" in text and "open" not in text and "close" not in text:
             return {"action": "whatsapp_flow", "target": text}
         
         # ===== CHECK 14: Send Email =====
