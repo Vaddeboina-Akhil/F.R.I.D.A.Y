@@ -1,16 +1,18 @@
 import time
 import datetime
 import random
+import webbrowser
 from voice.tts import speak_streaming, speak
 from voice.stt import listen
 from voice.wake_word import listen_for_wake_word, is_wake_word
-from brain.ollama import ask_brain, is_ollama_running
+from brain.ollama import ask_brain, is_ollama_running, correct_command
 from brain.command_parser import parse_command
-from memory.memory import cache_command, log_failure, get_most_used_commands, remember_fact, recall_facts, clear_memory
+from memory.memory import cache_command, log_failure, get_most_used_commands, remember_fact, recall_facts, clear_memory, get_cached_command
 from memory.memory import load_memory
 from actions.apps import open_app
-from actions.whatsapp import send_message_to_contact
+from actions.whatsapp import send_message_to_contact, send_whatsapp_flow
 from actions.email_sender import send_email_to_contact
+from actions.email_flow import run_email_flow
 from actions.web import (open_url, search_google, search_youtube, 
                          open_world_monitor, open_claude, open_chatgpt, open_and_search)
 from actions.web_reader import search_and_read
@@ -241,6 +243,26 @@ Deliver now:"""
             open_app("whatsapp")
             response = "Opening WhatsApp boss."
         
+        # Email flow (conversational email composition)
+        elif action == "email_flow":
+            speak("Starting email flow boss.")
+            result = run_email_flow(target)
+            response = result
+        
+        # WhatsApp flow (conversational WhatsApp messaging)
+        elif action == "whatsapp_flow":
+            result = send_whatsapp_flow()
+            response = result
+        
+        # Open Gmail
+        elif action == "open_gmail":
+            if target == "college":
+                webbrowser.open("https://mail.google.com/mail/u/1/")
+                response = "Opening college Gmail boss."
+            else:
+                webbrowser.open("https://mail.google.com/mail/u/0/")
+                response = "Opening personal Gmail boss."
+        
         # Get time
         elif action == "get_time":
             response = get_time()
@@ -460,8 +482,21 @@ def main():
             if not clean_text:
                 continue
             
-            # Parse the command
-            command = parse_command(clean_text)
+            # Correct speech recognition errors
+            corrected = correct_command(clean_text)
+            if corrected != clean_text:
+                print(f"Corrected: {corrected}")
+                clean_text = corrected
+            
+            # Check cache for repeated commands
+            cached = get_cached_command(clean_text)
+            if cached and cached.get("count", 0) >= 2:
+                print(f"Cache hit: {clean_text}")
+                command = {"action": cached["action"], "target": cached.get("target", clean_text)}
+            else:
+                # Parse the command
+                command = parse_command(clean_text)
+            
             print(f"Action: {command['action']}")
             
             # Execute the command

@@ -74,6 +74,107 @@ def ask_brain(user_input):
         return "Sorry boss, I had an error."
 
 
+def correct_command(text):
+    """Correct speech recognition errors in voice commands using Ollama"""
+    try:
+        prompt = f"""You are a speech correction AI. The user spoke a voice command but speech recognition made errors.
+Fix ONLY spelling/recognition mistakes. Keep the meaning exactly same.
+Common mistakes: "melt"→"mail", "cloud"→"claude", "good"→"google", "sent"→"send"
+Return ONLY the corrected command, nothing else, no explanation.
+Original command: "{text}"
+Corrected command:"""
+        
+        payload = {
+            "model": OLLAMA_MODEL,
+            "prompt": prompt,
+            "stream": False,
+            "options": {"num_predict": 20, "temperature": 0.1}
+        }
+        
+        response = requests.post(OLLAMA_URL, json=payload, timeout=10)
+        response.raise_for_status()
+        
+        return response.json()["response"].strip()
+    
+    except Exception as e:
+        print(f"Error correcting command: {e}")
+        return text
+
+
+def decide_action(user_input):
+    """
+    Use AI to intelligently decide which action to take for ambiguous commands.
+    Smart fallback for command parser when uncertain.
+    
+    Args:
+        user_input (str): User's voice command
+    
+    Returns:
+        dict: {"action": action_name, "target": target_value}
+    """
+    try:
+        TOOLS_PROMPT = """You are FRIDAY's action router. Given a voice command, decide which action to take.
+
+Available actions:
+- open_app: open any application (chrome, brave, spotify, discord, whatsapp, notepad, calculator, vs code, file explorer)
+- open_url: open a website (youtube, github, netflix, instagram, claude, chatgpt, gmail, google)
+- search_youtube: search for videos, music, songs, tutorials, gameplay
+- search_google: search for news, scores, weather, prices, facts
+- get_time: get current time
+- get_date: get current date
+- get_battery: check battery level
+- take_screenshot: take screenshot
+- world_briefing: world news briefing
+- india_briefing: india news
+- whatsapp_flow: send whatsapp message
+- email_flow: send email
+- scroll_down: scroll down
+- scroll_up: scroll up
+- open_world_monitor: open world monitor map
+- shutdown_pc: shutdown computer
+- restart_pc: restart computer
+- ask_brain: general conversation or unknown command
+
+Rules:
+- Return ONLY a JSON object like: {{"action": "open_app", "target": "chrome"}}
+- For open_app: target = app name
+- For open_url: target = website name
+- For search_youtube/search_google: target = search query
+- For email_flow: target = "to college account" or "to personal account" or original text
+- For ask_brain: target = original text
+- No explanation, just JSON
+
+Command: "{command}"
+JSON:"""
+        
+        prompt = TOOLS_PROMPT.format(command=user_input)
+        
+        payload = {
+            "model": OLLAMA_MODEL,
+            "prompt": prompt,
+            "stream": False,
+            "options": {"num_predict": 30, "temperature": 0.1}
+        }
+        
+        response = requests.post(OLLAMA_URL, json=payload, timeout=10)
+        response.raise_for_status()
+        
+        # Extract response text
+        text = response.json()["response"].strip()
+        
+        # Clean markdown code blocks if present
+        text = text.replace("```json", "").replace("```", "").strip()
+        
+        # Parse JSON
+        result = json.loads(text)
+        return result
+    
+    except Exception as e:
+        print(f"Error in decide_action: {e}")
+        # Fallback to ask_brain
+        return {"action": "ask_brain", "target": user_input}
+
+
 def is_ollama_running():
     """Check if Ollama service is running"""
     try:

@@ -1,20 +1,23 @@
 import subprocess
 import os
 import winreg
+import getpass
+import webbrowser
 
 
 COMMON_APPS = {
+    "whatsapp": "C:\\Users\\akhil\\AppData\\Local\\Microsoft\\WindowsApps\\WhatsApp.exe",
     "chrome": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "vs code": "C:\\Users\\akhil\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
-    "vscode": "C:\\Users\\akhil\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
-    "notepad": "notepad.exe",
-    "calculator": "calc.exe",
+    "brave": "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+    "file manager": "explorer.exe",
     "file explorer": "explorer.exe",
     "explorer": "explorer.exe",
-    "whatsapp": "C:\\Users\\akhil\\AppData\\Local\\WhatsApp\\WhatsApp.exe",
-    "brave": "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+    "notepad": "notepad.exe",
+    "calculator": "calc.exe",
+    "vs code": "C:\\Users\\akhil\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
+    "vscode": "C:\\Users\\akhil\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
+    "discord": "C:\\Users\\akhil\\AppData\\Local\\Discord\\Update.exe --processStart Discord.exe",
     "spotify": "C:\\Users\\akhil\\AppData\\Roaming\\Spotify\\Spotify.exe",
-    "discord": "C:\\Users\\akhil\\AppData\\Local\\Discord\\app-1.0.9005\\Discord.exe",
     "task manager": "taskmgr.exe",
     "paint": "mspaint.exe",
     "word": "winword.exe",
@@ -30,11 +33,45 @@ COMMON_APPS = {
 }
 
 
-def open_app(app_name):
-    """Open an application by name with smart dynamic detection"""
+def open_chrome_personal():
+    """
+    Open Chrome with personal profile or new tab if already running.
+    
+    Returns:
+        bool: True if successful
+    """
     try:
-        import webbrowser
+        CHROME = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
         
+        # Check if Chrome is already running
+        result = subprocess.run(["tasklist"], capture_output=True, text=True)
+        
+        if "chrome.exe" in result.stdout.lower():
+            # Chrome is running: open new tab in existing window
+            subprocess.Popen([CHROME, "--new-tab", "chrome://newtab"])
+        else:
+            # Chrome not running: open with personal profile
+            subprocess.Popen([CHROME, "--profile-directory=Default"])
+        
+        return True
+    
+    except Exception as e:
+        print(f"Error opening Chrome: {e}")
+        return False
+
+
+def open_app(app_name):
+    """
+    Open an application by name with smart detection.
+    Uses only subprocess.Popen - no terminal windows.
+    
+    Args:
+        app_name (str): Name of application to open
+    
+    Returns:
+        bool: True if app opened successfully, False otherwise
+    """
+    try:
         BROWSER_APPS = {
             "github": "https://github.com",
             "netflix": "https://netflix.com", 
@@ -50,38 +87,58 @@ def open_app(app_name):
             "chatgpt": "https://chatgpt.com"
         }
         
+        # Clean app name
         app_lower = app_name.lower().strip()
         
-        # Browser apps - open URLs directly
+        # Remove filler words
+        filler_words = ["the", "my", "a", "an", "app"]
+        for word in filler_words:
+            app_lower = app_lower.replace(f" {word} ", " ").replace(f"{word} ", "").replace(f" {word}", "")
+        app_lower = app_lower.strip()
+        
+        # ===== STEP 1: Check browser apps first =====
         if app_lower in BROWSER_APPS:
             webbrowser.open(BROWSER_APPS[app_lower])
             return True
         
-        # Step 1: Check COMMON_APPS dictionary as quick lookup cache
+        # ===== STEP 2: Check COMMON_APPS dictionary =====
+        # Special handling for Chrome
+        if app_lower == "chrome":
+            return open_chrome_personal()
+        
         if app_lower in COMMON_APPS:
             path = COMMON_APPS[app_lower]
-            if os.path.exists(path):
+            
+            # For exe paths that exist
+            if path.endswith(".exe"):
+                if os.path.exists(path):
+                    subprocess.Popen([path])
+                    return True
+            else:
+                # For simple executable names like explorer.exe, calc.exe
                 subprocess.Popen(path)
                 return True
         
-        # Step 2: Search Windows registry
+        # ===== STEP 3: Search Windows registry =====
         try:
             key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, 
                 f"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\{app_lower}.exe")
             path = winreg.QueryValue(key, None)
             if path and os.path.exists(path):
-                subprocess.Popen(path)
+                subprocess.Popen([path])
                 return True
         except:
             pass
         
-        # Step 3: Search common folders dynamically with os.walk
+        # ===== STEP 4: Search common folders dynamically =====
         try:
+            user = getpass.getuser()
             search_dirs = [
                 "C:\\Program Files",
                 "C:\\Program Files (x86)",
-                f"C:\\Users\\{os.getlogin()}\\AppData\\Local",
-                f"C:\\Users\\{os.getlogin()}\\AppData\\Roaming"
+                f"C:\\Users\\{user}\\AppData\\Local",
+                f"C:\\Users\\{user}\\AppData\\Roaming",
+                f"C:\\Users\\{user}\\AppData\\Local\\Microsoft\\WindowsApps"
             ]
             
             for folder in search_dirs:
@@ -89,24 +146,18 @@ def open_app(app_name):
                     continue
                 
                 for root, dirs, files in os.walk(folder):
-                    # Skip temp directories
-                    dirs[:] = [d for d in dirs if d.lower() != "temp"]
+                    # Skip temp/cache folders
+                    dirs[:] = [d for d in dirs if d.lower() not in ["temp", "cache", "log", "logs"]]
                     
                     for file in files:
                         if file.lower() == f"{app_lower}.exe":
                             full_path = os.path.join(root, file)
-                            subprocess.Popen(full_path)
+                            subprocess.Popen([full_path])
                             return True
         except:
             pass
         
-        # Step 4: Try Windows shell as last resort
-        try:
-            os.system(f"start {app_lower}")
-            return True
-        except:
-            pass
-        
+        # ===== STEP 5: Return False =====
         return False
     
     except Exception as e:
