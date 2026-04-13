@@ -37,6 +37,20 @@ def ask(question):
     return response.lower().strip()
 
 
+def is_cancellation(response):
+    """
+    Check if the response indicates cancellation.
+    
+    Args:
+        response (str): User's response
+    
+    Returns:
+        bool: True if cancellation detected
+    """
+    cancel_words = ["forget", "cancel", "stop", "never mind", "abort", "quit", "exit"]
+    return any(word in response.lower() for word in cancel_words)
+
+
 def run_email_flow(initial_command=""):
     """
     Run complete conversational email flow with 8-step process.
@@ -71,6 +85,9 @@ def run_email_flow(initial_command=""):
         else:
             # Fallback: ask which account to send from
             ans = ask("Should I send from personal or college account boss?")
+            if is_cancellation(ans):
+                speak("Email cancelled boss.")
+                return "Email cancelled."
             if "college" in ans:
                 from_account = "college"
                 to_email = PERSONAL_EMAIL
@@ -96,6 +113,9 @@ def run_email_flow(initial_command=""):
         
         # ===== STEP 4: Ask subject =====
         subject = ask("What's the subject boss?")
+        if is_cancellation(subject):
+            speak("Email cancelled boss.")
+            return "Email cancelled."
         if not subject or len(subject) < 2:
             subject = "Message from FRIDAY"
         pyperclip.copy(subject)
@@ -105,6 +125,9 @@ def run_email_flow(initial_command=""):
         
         # ===== STEP 5: Ask body =====
         body = ask("What should I write boss?")
+        if is_cancellation(body):
+            speak("Email cancelled boss.")
+            return "Email cancelled."
         if not body or len(body) < 2:
             body = "Sent via FRIDAY."
         pyperclip.copy(body)
@@ -113,8 +136,14 @@ def run_email_flow(initial_command=""):
         
         # ===== STEP 6: Ask files =====
         ans = ask("Any files to attach boss? Say yes or no.")
+        if is_cancellation(ans):
+            speak("Email cancelled boss.")
+            return "Email cancelled."
         if "yes" in ans:
             file_name = ask("What is the file name boss?")
+            if is_cancellation(file_name):
+                speak("Email cancelled boss.")
+                return "Email cancelled."
             speak(f"I'll look for {file_name} boss.")
             
             for folder in ["Desktop", "Downloads", "Documents"]:

@@ -6,7 +6,7 @@ import webbrowser
 
 
 COMMON_APPS = {
-    "whatsapp": "C:\\Users\\akhil\\AppData\\Local\\Microsoft\\WindowsApps\\WhatsApp.exe",
+    "whatsapp": "C:\\Program Files\\WindowsApps\\5319275A.WhatsAppDesktop_2.2613.101.0_x64__cv1g1gvanyjgm\\WhatsApp.Root.exe",
     "chrome": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
     "brave": "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
     "file manager": "explorer.exe",
@@ -35,7 +35,8 @@ COMMON_APPS = {
 
 def open_chrome_personal():
     """
-    Open Chrome with personal profile or new tab if already running.
+    Open Chrome with personal profile (Default, now default profile).
+    Opens new tab if Chrome is running, otherwise opens maximized window.
     
     Returns:
         bool: True if successful
@@ -50,8 +51,8 @@ def open_chrome_personal():
             # Chrome is running: open new tab in existing window
             subprocess.Popen([CHROME, "--new-tab", "chrome://newtab"])
         else:
-            # Chrome not running: open with personal profile
-            subprocess.Popen([CHROME, "--profile-directory=Default"])
+            # Chrome not running: open with default profile (Default), maximized
+            subprocess.Popen([CHROME, "--start-maximized"])
         
         return True
     
@@ -89,48 +90,68 @@ def open_app(app_name):
         
         # Clean app name
         app_lower = app_name.lower().strip()
+        print(f"[DEBUG] Opening app: {app_lower}")
         
         # Remove filler words
         filler_words = ["the", "my", "a", "an", "app"]
         for word in filler_words:
             app_lower = app_lower.replace(f" {word} ", " ").replace(f"{word} ", "").replace(f" {word}", "")
         app_lower = app_lower.strip()
+        print(f"[DEBUG] After cleanup: {app_lower}")
         
         # ===== STEP 1: Check browser apps first =====
         if app_lower in BROWSER_APPS:
+            print(f"[DEBUG] Found in BROWSER_APPS: {app_lower}")
             webbrowser.open(BROWSER_APPS[app_lower])
             return True
         
         # ===== STEP 2: Check COMMON_APPS dictionary =====
+        print(f"[DEBUG] Checking COMMON_APPS...")
+        
         # Special handling for Chrome
         if app_lower == "chrome":
-            return open_chrome_personal()
+            print(f"[DEBUG] Chrome detected, calling open_chrome_personal()")
+            result = open_chrome_personal()
+            print(f"[DEBUG] open_chrome_personal() returned: {result}")
+            return result
         
         if app_lower in COMMON_APPS:
             path = COMMON_APPS[app_lower]
+            print(f"[DEBUG] Found in COMMON_APPS: {app_lower} -> {path}")
             
-            # For exe paths that exist
-            if path.endswith(".exe"):
+            # Check if it's a full path or simple executable name
+            if "\\" in path:
+                # Full path like "C:\\Program Files\\..."
                 if os.path.exists(path):
+                    print(f"[DEBUG] Full path exists, launching: {path}")
                     subprocess.Popen([path])
                     return True
+                else:
+                    print(f"[DEBUG] Full path NOT found: {path}")
             else:
-                # For simple executable names like explorer.exe, calc.exe
+                # Simple executable name like "explorer.exe", "calc.exe"
+                print(f"[DEBUG] Simple executable name, launching: {path}")
                 subprocess.Popen(path)
                 return True
         
+        print(f"[DEBUG] Not in COMMON_APPS")
+        
         # ===== STEP 3: Search Windows registry =====
+        print(f"[DEBUG] Searching registry...")
         try:
             key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, 
                 f"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\{app_lower}.exe")
             path = winreg.QueryValue(key, None)
             if path and os.path.exists(path):
+                print(f"[DEBUG] Found in registry: {path}")
                 subprocess.Popen([path])
                 return True
-        except:
+        except Exception as e:
+            print(f"[DEBUG] Registry search failed: {e}")
             pass
         
         # ===== STEP 4: Search common folders dynamically =====
+        print(f"[DEBUG] Searching common folders...")
         try:
             user = getpass.getuser()
             search_dirs = [
@@ -152,16 +173,19 @@ def open_app(app_name):
                     for file in files:
                         if file.lower() == f"{app_lower}.exe":
                             full_path = os.path.join(root, file)
+                            print(f"[DEBUG] Found in folder search: {full_path}")
                             subprocess.Popen([full_path])
                             return True
-        except:
+        except Exception as e:
+            print(f"[DEBUG] Folder search failed: {e}")
             pass
         
+        print(f"[DEBUG] App not found: {app_lower}")
         # ===== STEP 5: Return False =====
         return False
     
     except Exception as e:
-        print(f"Error opening app: {e}")
+        print(f"[ERROR] in open_app: {e}")
         return False
 
 

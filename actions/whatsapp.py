@@ -97,6 +97,7 @@ def open_whatsapp():
     try:
         # Try multiple WhatsApp paths
         paths = [
+            "C:\\Program Files\\WindowsApps\\5319275A.WhatsAppDesktop_2.2613.101.0_x64__cv1g1gvanyjgm\\WhatsApp.Root.exe",
             "C:\\Users\\akhil\\AppData\\Local\\Microsoft\\WindowsApps\\WhatsApp.exe",
             "C:\\Program Files\\WindowsApps\\WhatsApp.exe",
         ]
@@ -119,7 +120,7 @@ def open_whatsapp():
 
 def send_whatsapp_message(contact_name, message):
     """
-    Send a WhatsApp message to a contact using screen automation.
+    Send a WhatsApp message to a contact using screen automation for desktop app.
     
     Args:
         contact_name (str): Name of the contact
@@ -129,38 +130,39 @@ def send_whatsapp_message(contact_name, message):
         tuple: (success: bool, response: str)
     """
     try:
-        # Step 1: Open WhatsApp
+        # Step 1: Open WhatsApp (if not already open)
         open_whatsapp()
         
-        # Step 2: Find and click search box
-        if not click_on_text("Search"):
-            if not click_on_text("search or start"):
-                pyautogui.hotkey('ctrl', 'f')
-        time.sleep(1)
-        
-        # Step 3: Type contact name
-        pyperclip.copy(contact_name)
-        pyautogui.hotkey('ctrl', 'v')
+        # Step 2: Wait for WhatsApp to load
         time.sleep(2)
         
-        # Step 4: Find contact in results
-        coords = find_text_on_screen(contact_name)
-        if coords:
-            pyautogui.click(coords[0], coords[1])
-        else:
-            pyautogui.press('enter')
-        time.sleep(1)
-        
-        # Step 5: Find and click message box
-        if not click_on_text("Type a message"):
-            if not click_on_text("message"):
-                pyautogui.press('tab')
+        # Step 3: Click on search box (top left area)
+        search_box_x, search_box_y = 240, 117  # Coordinates of "Search or start a new chat" box
+        pyautogui.click(search_box_x, search_box_y)
         time.sleep(0.5)
         
-        # Step 6: Type and send message
+        # Step 4: Clear any existing text and type contact name
+        pyautogui.hotkey('ctrl', 'a')
+        time.sleep(0.2)
+        pyperclip.copy(contact_name)
+        pyautogui.hotkey('ctrl', 'v')
+        time.sleep(1.5)
+        
+        # Step 5: Press Enter to select the first result
+        pyautogui.press('enter')
+        time.sleep(1.5)
+        
+        # Step 6: Click on the message input box (bottom right area)
+        msg_input_x, msg_input_y = 900, 732  # Coordinates of "Type a message" box
+        pyautogui.click(msg_input_x, msg_input_y)
+        time.sleep(0.5)
+        
+        # Step 7: Type the message
         pyperclip.copy(message)
         pyautogui.hotkey('ctrl', 'v')
         time.sleep(0.3)
+        
+        # Step 8: Press Enter to send
         pyautogui.press('enter')
         time.sleep(0.5)
         
