@@ -98,6 +98,110 @@ def click_on_text(search_text, confidence=50):
         return False
 
 
+def is_whatsapp_loaded():
+    """
+    Check if WhatsApp is fully loaded using OCR.
+    Detects the search box text "Search or start a new chat"
+    
+    Returns:
+        bool: True if WhatsApp UI is loaded
+    """
+    try:
+        screenshot = pyautogui.screenshot()
+        img_array = np.array(screenshot)
+        gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+        data = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
+        
+        # Look for WhatsApp UI indicators
+        for i in range(len(data['text'])):
+            word = data['text'][i].lower()
+            if "search" in word and ("chat" in word or "start" in word):
+                print(f"[DEBUG] WhatsApp loaded! Detected: '{word}'")
+                return True
+            elif word == "chats":
+                print(f"[DEBUG] WhatsApp loaded! Detected: 'Chats' heading")
+                return True
+        
+        return False
+    except Exception as e:
+        print(f"Error checking WhatsApp load status: {str(e)}")
+        return False
+
+
+def wait_for_whatsapp_load(max_wait=10):
+    """
+    Wait for WhatsApp to load by monitoring screen for UI elements.
+    
+    Args:
+        max_wait (int): Maximum seconds to wait
+    
+    Returns:
+        bool: True if WhatsApp loaded, False if timeout
+    """
+    print(f"[DEBUG] Waiting for WhatsApp to load (max {max_wait} seconds)...")
+    start_time = time.time()
+    
+    while time.time() - start_time < max_wait:
+        if is_whatsapp_loaded():
+            elapsed = time.time() - start_time
+            print(f"[DEBUG] WhatsApp loaded in {elapsed:.1f} seconds")
+            return True
+        time.sleep(0.5)  # Check every 500ms
+    
+    print(f"[DEBUG] WhatsApp did not load after {max_wait} seconds")
+    return False
+
+
+def is_chat_message_box_ready():
+    """
+    Check if the chat message input box is visible using OCR.
+    Detects "Type a message" placeholder text
+    
+    Returns:
+        bool: True if message box is ready
+    """
+    try:
+        screenshot = pyautogui.screenshot()
+        img_array = np.array(screenshot)
+        gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+        data = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
+        
+        for i in range(len(data['text'])):
+            word = data['text'][i].lower()
+            if "message" in word or "type" in word:
+                print(f"[DEBUG] Chat message box detected: '{word}'")
+                return True
+        
+        return False
+    except Exception as e:
+        print(f"Error checking message box: {str(e)}")
+        return False
+
+
+def wait_for_chat_load(max_wait=8):
+    """
+    Wait for chat window to fully load.
+    
+    Args:
+        max_wait (int): Maximum seconds to wait
+    
+    Returns:
+        bool: True if chat loaded, False if timeout
+    """
+    print(f"[DEBUG] Waiting for chat window to load (max {max_wait} seconds)...")
+    start_time = time.time()
+    
+    while time.time() - start_time < max_wait:
+        if is_chat_message_box_ready():
+            elapsed = time.time() - start_time
+            print(f"[DEBUG] Chat loaded in {elapsed:.1f} seconds")
+            return True
+        time.sleep(0.5)
+    
+    print(f"[DEBUG] Chat did not load after {max_wait} seconds")
+    return False
+
+
 def open_whatsapp():
     """
     Open WhatsApp application.
@@ -151,20 +255,25 @@ def send_whatsapp_message(contact_name, message):
         # Step 1: Open WhatsApp (if not already open)
         open_whatsapp()
         
-        # Step 2: EXTENDED WAIT for WhatsApp to fully load and UI to be ready
-        print("[DEBUG] Waiting for WhatsApp UI to load...")
-        time.sleep(6)  # INCREASED - Give WhatsApp time to fully load
+        # Step 2: Wait for WhatsApp to load by monitoring screen (adaptive wait)
+        if not wait_for_whatsapp_load(max_wait=10):
+            return False, "WhatsApp took too long to load boss."
         
-        # Step 3: Press Ctrl+F to focus search box
+        # Step 3: Click on WhatsApp window to ensure focus
+        print("[DEBUG] Clicking on WhatsApp to ensure focus...")
+        pyautogui.click(900, 300)  # Click on the right side to avoid opening chats
+        time.sleep(0.3)
+        
+        # Step 4: Press Ctrl+F to focus search box
         print("[DEBUG] Pressing Ctrl+F to open search...")
         pyautogui.hotkey('ctrl', 'f')
         time.sleep(0.8)  # Give search box time to activate
         
-        # Step 4: Select all text in search box and clear it
+        # Step 5: Select all text in search box and clear it
         pyautogui.hotkey('ctrl', 'a')
         time.sleep(0.3)
         
-        # Step 5: Type contact name using clipboard (more reliable)
+        # Step 6: Type contact name using clipboard (more reliable)
         print(f"[DEBUG] Pasting contact name: {contact_name}")
         pyperclip.copy(contact_name)
         time.sleep(0.2)
@@ -172,7 +281,7 @@ def send_whatsapp_message(contact_name, message):
         print(f"[DEBUG] Pasted: {contact_name}")
         time.sleep(2.5)  # Wait for search results to appear
         
-        # Step 6: Press Down arrow to select from search results
+        # Step 7: Press Down arrow to select from search results
         print("[DEBUG] Selecting first search result...")
         pyautogui.press('down')
         time.sleep(0.5)
@@ -180,13 +289,12 @@ def send_whatsapp_message(contact_name, message):
         # Step 7: Press Enter to open the selected chat
         print("[DEBUG] Opening chat...")
         pyautogui.press('enter')
-        time.sleep(2)  # Wait a bit for chat selection
         
-        # Step 8: EXTENDED WAIT for chat window/message input to fully load
-        print("[DEBUG] Waiting for chat window to fully load...")
-        time.sleep(4)  # INCREASED - Let the chat interface fully render
+        # Step 8: Wait for chat window to load by monitoring screen (adaptive wait)
+        if not wait_for_chat_load(max_wait=8):
+            print("[DEBUG] Warning: Chat may not have fully loaded, proceeding anyway...")
         
-        # Step 9: Click on the message input box (bottom right area)
+        # Step 10: Click on the message input box (bottom right area)
         # "Type a message" box coordinates
         msg_input_x, msg_input_y = 900, 732
         print(f"[DEBUG] Clicking message input at ({msg_input_x}, {msg_input_y})")
@@ -240,15 +348,26 @@ def send_whatsapp_flow(initial_command=""):
             initial_lower = initial_command.lower().strip()
             print(f"[DEBUG] Checking contact from: '{initial_lower}'")
             
-            # Check for direct contact mentions (more flexible matching)
-            if any(word in initial_lower for word in ["myself", "self", "me only", "it myself"]):
-                contact = "myself"
-                print(f"[DEBUG] Detected 'myself' contact")
-            elif any(word in initial_lower for word in ["minegang", "mine gang", "mind game", "my gang"]):
-                contact = "minegang"
-                print(f"[DEBUG] Detected 'minegang' contact")
+            # First, check for direct contact aliases using word boundaries
+            import re
+            for alias in CONTACT_ALIASES.keys():
+                # Use word boundaries to match whole words only
+                pattern = r'\b' + re.escape(alias) + r'\b'
+                if re.search(pattern, initial_lower):
+                    contact = alias
+                    print(f"[DEBUG] Detected alias: {alias}")
+                    break
+            
+            # If no alias found, try to extract contact name from command
+            # Look for patterns like "to [name]" or "message [name]"
+            if not contact:
+                # Pattern: to [word]
+                match = re.search(r'to\s+(\w+)', initial_lower)
+                if match:
+                    contact = match.group(1)
+                    print(f"[DEBUG] Extracted contact from command: {contact}")
         
-        # If contact found in command, skip asking
+        # If contact found in command, use it
         if contact:
             print(f"[DEBUG] Contact detected from command: {contact}")
             speak(f"Messaging {contact} boss.")

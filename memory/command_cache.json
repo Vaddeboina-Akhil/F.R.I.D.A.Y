@@ -12,5 +12,26 @@
     "response": "Message sent to +91 93925 24228 (You) boss.",
     "count": 7,
     "last_used": "2026-04-13T17:55:21.951327"
+  },
+  "whatsapp_flow:send a message": {
+    "action": "whatsapp_flow",
+    "target": "send a message",
+    "response": "Failed boss: name 'open_whatsapp' is not defined",
+    "count": 1,
+    "last_used": "2026-04-13T17:58:01.662650"
+  },
+  "whatsapp_flow:send a message to bhavana": {
+    "action": "whatsapp_flow",
+    "target": "send a message to bhavana",
+    "response": "Message sent to bhavana boss.",
+    "count": 5,
+    "last_used": "2026-04-13T18:09:25.890231"
+  },
+  "whatsapp_flow:send a message to mum": {
+    "action": "whatsapp_flow",
+    "target": "send a message to mum",
+    "response": "Message sent to mum boss.",
+    "count": 1,
+    "last_used": "2026-04-13T18:10:19.058862"
   }
 }
