@@ -24,8 +24,8 @@
     "action": "whatsapp_flow",
     "target": "send a message to bhavana",
     "response": "Message sent to bhavana boss.",
-    "count": 5,
-    "last_used": "2026-04-13T18:09:25.890231"
+    "count": 6,
+    "last_used": "2026-04-14T11:41:23.393935"
   },
   "whatsapp_flow:send a message to mum": {
     "action": "whatsapp_flow",
@@ -59,8 +59,8 @@
     "action": "ask_brain",
     "target": null,
     "response": "Alright, let\u2019s get this done then! What exactly need we manually handle today?",
-    "count": 1,
-    "last_used": "2026-04-13T19:03:50.180352"
+    "count": 4,
+    "last_used": "2026-04-14T11:39:54.486416"
   },
   "ask_brain:manually": {
     "action": "ask_brain",
@@ -68,5 +68,33 @@
     "response": "Alright, let\u2019s get this done then! What exactly need we manually handle today?",
     "count": 1,
     "last_used": "2026-04-13T19:03:50.189026"
+  },
+  "world_briefing": {
+    "action": "world_briefing",
+    "target": null,
+    "response": "FRIDAY: In Hungary, Orb\u00e1n's era came to an end as Magyar swept to victory with a landslide. In Europe, Budapest's jubilation is palpable, but Moscow remains indifferent. The Pope speaks out against Trump, saying he has no fear \u2013 though his critics are not amused. And in India, Britney Spears' rehab stint comes at a time when her music reigns supreme. I've opened the World Monitor so you can track it visually boss.",
+    "count": 6,
+    "last_used": "2026-04-14T12:43:32.382913"
+  },
+  "coding_agent:build me a calculator app": {
+    "action": "coding_agent",
+    "target": "build me a calculator app",
+    "response": "Couldn't hear your idea boss.",
+    "count": 2,
+    "last_used": "2026-04-14T11:43:25.255378"
+  },
+  "shutdown_pc": {
+    "action": "shutdown_pc",
+    "target": null,
+    "response": "Shutting down in 30 seconds boss.",
+    "count": 1,
+    "last_used": "2026-04-14T11:43:39.665383"
+  },
+  "email_flow:to college account": {
+    "action": "email_flow",
+    "target": "to college account",
+    "response": "Email sent boss.",
+    "count": 1,
+    "last_used": "2026-04-14T12:46:03.987509"
   }
 }

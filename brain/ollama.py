@@ -188,3 +188,159 @@ def clear_history():
     """Clear conversation history"""
     global conversation_history
     conversation_history.clear()
+
+
+def plan_next_action(context, current_screen, last_action, last_result):
+    """
+    Use AI to plan the next action based on current state.
+    
+    Args:
+        context (str): User's original goal
+        current_screen (str): What is visible on screen
+        last_action (str): The action that was just taken
+        last_result (str): The result of the last action
+    
+    Returns:
+        dict: {"next_action": action_name, "target": target, "reason": reason}
+    """
+    try:
+        prompt = f"""You are FRIDAY, an autonomous AI assistant with access to:
+- Screen reading and OCR
+- Mouse and keyboard control
+- Browser automation
+- File system access
+- App launching
+
+Current situation:
+- Last action taken: {last_action}
+- Result of last action: {last_result}
+- What is currently visible on screen: {current_screen[:300]}
+- User's original goal: {context}
+
+Based on this, what should be the NEXT action to take to achieve the goal?
+
+Respond with JSON only:
+{{"next_action": "action_name", "target": "what to act on", "reason": "why"}}
+
+Available actions: click_text, type_text, scroll_down, scroll_up, open_app, 
+open_url, press_key, wait, take_screenshot, read_screen, done
+
+If goal is achieved respond: {{"next_action": "done", "target": "", "reason": "goal achieved"}}"""
+        
+        payload = {
+            "model": OLLAMA_MODEL,
+            "prompt": prompt,
+            "stream": False,
+            "options": {"num_predict": 60, "temperature": 0.1}
+        }
+        
+        response = requests.post(OLLAMA_URL, json=payload, timeout=15)
+        response.raise_for_status()
+        
+        # Extract response text
+        text = response.json()["response"].strip()
+        
+        # Clean markdown code blocks if present
+        text = text.replace("```json", "").replace("```", "").strip()
+        
+        # Parse JSON
+        result = json.loads(text)
+        return result
+    
+    except Exception as e:
+        print(f"Error in plan_next_action: {e}")
+        return {"next_action": "done", "target": "", "reason": "error"}
+
+
+def autonomous_execute(goal, max_steps=10):
+    """
+    Execute a goal autonomously using AI planning and screen automation.
+    
+    Args:
+        goal (str): The goal to achieve
+        max_steps (int): Maximum steps to take before stopping
+    
+    Returns:
+        str: Completion message
+    """
+    try:
+        # Import required modules
+        import time
+        import pyautogui
+        from actions.screen import click_text, type_text, scroll_down, scroll_up, take_screenshot
+        from actions.screen_monitor import get_current_screen
+        
+        last_action = "none"
+        last_result = "starting"
+        step = 0
+        
+        while step < max_steps:
+            # Get current screen state
+            screen = get_current_screen()
+            
+            # Get AI plan for next action
+            plan = plan_next_action(goal, screen, last_action, last_result)
+            next_action = plan.get("next_action", "done")
+            target = plan.get("target", "")
+            
+            # Log what AI decided
+            print(f"AI Planning: {next_action} → {target}")
+            
+            # Check if goal is achieved
+            if next_action == "done":
+                break
+            
+            # Execute the planned action
+            if next_action == "click_text":
+                success, msg = click_text(target)
+                last_result = msg
+            
+            elif next_action == "type_text":
+                type_text(target)
+                last_result = f"typed {target}"
+            
+            elif next_action == "scroll_down":
+                scroll_down()
+                last_result = "scrolled down"
+            
+            elif next_action == "scroll_up":
+                scroll_up()
+                last_result = "scrolled up"
+            
+            elif next_action == "press_key":
+                pyautogui.press(target)
+                last_result = f"pressed {target}"
+            
+            elif next_action == "wait":
+                time.sleep(2)
+                last_result = "waited"
+            
+            elif next_action == "read_screen":
+                last_result = screen[:200]
+            
+            elif next_action == "take_screenshot":
+                take_screenshot()
+                last_result = "screenshot taken"
+            
+            elif next_action == "open_app":
+                from actions.apps import open_app
+                open_app(target)
+                last_result = f"opened {target}"
+            
+            elif next_action == "open_url":
+                from actions.web import open_url
+                open_url(target)
+                last_result = f"opened {target}"
+            
+            # Update action tracking
+            last_action = next_action
+            step += 1
+            
+            # Brief pause between actions
+            time.sleep(0.5)
+        
+        return f"Task completed in {step} steps boss."
+    
+    except Exception as e:
+        print(f"Error in autonomous_execute: {e}")
+        return f"Task failed after {step} steps boss."

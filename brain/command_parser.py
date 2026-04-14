@@ -317,6 +317,25 @@ def parse_command(text):
             else:
                 return {"action": "open_gmail", "target": "personal"}
 
+        # ===== CHECK 18: Coding Agent =====
+        coding_phrases = [
+            "build me", "create a project", "code for me", "write code",
+            "build an app", "create an app", "make a project", "develop",
+            "build a", "create a program"
+        ]
+        if any(phrase in text for phrase in coding_phrases):
+            return {"action": "coding_agent", "target": text}
+        
+        if "coding agent" in text or "start coding" in text:
+            return {"action": "coding_agent", "target": text}
+
+        # ===== CHECK 19: Autonomous Mode =====
+        if "autonomously" in text or "figure it out" in text or "do it yourself" in text:
+            return {"action": "autonomous", "target": text}
+        
+        if "auto" in text and any(phrase in text for phrase in ["open", "find", "click", "search", "navigate"]):
+            return {"action": "autonomous", "target": text}
+
         
         # ===== DEFAULT: Use AI to decide action (smart fallback) =====
         from brain.ollama import decide_action

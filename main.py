@@ -2,10 +2,11 @@ import time
 import datetime
 import random
 import webbrowser
+import threading
 from voice.tts import speak_streaming, speak
 from voice.stt import listen
 from voice.wake_word import listen_for_wake_word, is_wake_word
-from brain.ollama import ask_brain, is_ollama_running, correct_command
+from brain.ollama import ask_brain, is_ollama_running, correct_command, autonomous_execute
 from brain.command_parser import parse_command
 from memory.memory import cache_command, log_failure, get_most_used_commands, remember_fact, recall_facts, clear_memory, get_cached_command
 from memory.memory import load_memory
@@ -13,6 +14,7 @@ from actions.apps import open_app, close_app, close_all_apps
 from actions.whatsapp import send_message_to_contact, send_whatsapp_flow
 from actions.email_sender import send_email_to_contact
 from actions.email_flow import run_email_flow
+from actions.coding_agent import coding_agent_flow
 from actions.web import (open_url, search_google, search_youtube, 
                          open_world_monitor, open_claude, open_chatgpt, open_and_search)
 from actions.web_reader import search_and_read
@@ -22,6 +24,7 @@ from actions.system import (get_time, get_date, get_battery, take_screenshot,
 from actions.clock import open_clock, set_timer, set_alarm, close_clock
 from actions.screen import click_text, find_text_on_screen, get_screen_text, scroll_down, scroll_up, type_text, press_key
 from actions.screen_monitor import start_monitoring, stop_monitoring, get_current_screen, is_text_on_screen
+from gui.dashboard import init_dashboard, update_status, update_heard, update_response, log_action, get_dashboard
 
 
 # Response variations for natural, conversational feel
@@ -183,33 +186,14 @@ def execute_command(command, original_text=""):
         # World news briefing
         elif action == "world_briefing":
             speak_streaming("Give me a second boss, let me check...")
-            data = get_world_briefing()
+            response = get_world_briefing()
             open_world_monitor()
-            
-            # Build prompt for Ollama to deliver briefing in FRIDAY's style
-            prompt = f"""You are FRIDAY from Iron Man. Deliver this world news briefing 
-in your signature style - confident, sharp, slightly dramatic like a real 
-intelligence briefing. Make it sound like you actually care about what's 
-happening. Keep it under 4 sentences total. 
-Global headlines: {data['raw']}
-India headlines: {data['india_raw']}
-Deliver the briefing now:"""
-            
-            response = ask_brain(prompt)
             response += " I've opened the World Monitor so you can track it visually boss."
         
         # India news briefing
         elif action == "india_briefing":
             speak_streaming("Checking India news boss...")
-            data = get_india_briefing()
-            
-            # Build prompt for Ollama to deliver India briefing
-            prompt = f"""You are FRIDAY from Iron Man. Deliver this India news briefing 
-in your signature style. Sharp, confident, 3 sentences max.
-Headlines: {data['raw']}
-Deliver now:"""
-            
-            response = ask_brain(prompt)
+            response = get_india_briefing()
         # News by topic
         elif action == "get_news_topic":
             headlines = get_news_by_topic(target)
@@ -269,6 +253,18 @@ Deliver now:"""
         elif action == "whatsapp_flow":
             result = send_whatsapp_flow(target)  # Pass target contact if available
             response = result
+        
+        # Coding Agent (autonomous code generation)
+        elif action == "coding_agent":
+            speak("Opening assistant for coding boss.")
+            result = coding_agent_flow(target)
+            return result
+        
+        # Autonomous Mode (AI plans and executes multi-step tasks)
+        elif action == "autonomous":
+            speak("Going autonomous boss.")
+            result = autonomous_execute(target)
+            return result
         
         # Open Gmail
         elif action == "open_gmail":
@@ -456,8 +452,8 @@ Screen content: {clean}"""
         return "Sorry boss, something went wrong."
 
 
-def main():
-    print("Initializing FRIDAY...")
+def friday_core():
+    """FRIDAY voice interaction core logic - runs in daemon thread"""
     
     # Check if Ollama is running
     if not is_ollama_running():
@@ -478,9 +474,7 @@ def main():
     else:
         speak_streaming(f"FRIDAY online. {greeting} boss. How can I help you?")
     
-    # Start screen monitoring
-    start_monitoring(interval=2)
-    print("Screen monitoring active")
+    update_status("LISTENING")
     
     # Define active mode function
     def active_mode(initial_command=None):
@@ -490,25 +484,35 @@ def main():
         # Process initial command if provided
         if initial_command is not None:
             print(f"You said: {initial_command}")
+            update_heard(initial_command)
             command = parse_command(initial_command)
             print(f"Action: {command['action']}")
+            update_status("THINKING")
             response = execute_command(command, initial_command)
+            update_response(response)
+            log_action(command['action'], response)
             print(f"FRIDAY: {response}")
+            update_status("SPEAKING")
             speak_streaming(response)
+            update_status("LISTENING")
             active_start = time.time()  # Reset timer after initial command
         
         # Listen for more commands for 30 seconds
         while time.time() - active_start < 30:
+            update_status("LISTENING")
+            time.sleep(0.1)  # Brief sleep to prevent busy waiting
             text = listen()
             
             if text is None:
                 continue
             
             print(f"You said: {text}")
+            update_heard(text)
             
             # Check for sleep/exit commands
             if any(word in text.lower() for word in ["sleep", "goodbye", "stop"]):
                 speak_streaming("Going to sleep boss.")
+                update_status("STANDBY")
                 return
             
             # Remove wake words from text before processing
@@ -534,11 +538,16 @@ def main():
             print(f"Action: {command['action']}")
             
             # Execute the command
+            update_status("THINKING")
             response = execute_command(command, clean_text)
+            update_response(response)
+            log_action(command['action'], response)
             
             # Print and speak response
             print(f"FRIDAY: {response}")
+            update_status("SPEAKING")
             speak_streaming(response)
+            update_status("LISTENING")
             
             # Reset timer after each command
             active_start = time.time()
@@ -549,12 +558,15 @@ def main():
     # Outer loop: passive mode waiting for wake word
     while True:
         print("FRIDAY passive mode... say 'Friday' to activate")
+        update_status("PASSIVE")
+        time.sleep(0.1)  # Brief sleep to prevent busy waiting
         
         # Listen for wake word
         wake_detected, heard_text = listen_for_wake_word()
         
         # Wake word detected, activate
         speak_streaming("Yes boss?")
+        update_status("LISTENING")
         
         # Remove wake word from heard text
         clean_command = heard_text.replace("friday", "").replace("edith", "").strip()
@@ -564,6 +576,29 @@ def main():
             active_mode(initial_command=clean_command)
         else:
             active_mode()
+
+
+def main():
+    """Initialize FRIDAY and run GUI on main thread"""
+    print("Initializing FRIDAY...")
+    
+    # Check if Ollama is running
+    if not is_ollama_running():
+        speak_streaming("Ollama is not running. Please start Ollama.")
+        return
+    
+    # Start screen monitoring
+    start_monitoring(interval=2)
+    print("Screen monitoring active")
+    
+    # Start FRIDAY core logic in daemon thread
+    friday_thread = threading.Thread(target=friday_core, daemon=True)
+    friday_thread.start()
+    
+    # Initialize and run GUI dashboard on main thread
+    dashboard = init_dashboard()
+    update_status("STANDBY")
+    dashboard.run()  # This blocks until window is closed
 
 
 if __name__ == "__main__":

@@ -130,8 +130,14 @@ def search_youtube(query):
 
 
 def open_world_monitor():
-    """Open the World Monitor dashboard"""
+    """Open the World Monitor dashboard - checks if already open first"""
     try:
+        # Check if world monitor is already open
+        result = subprocess.run(["tasklist", "/v"], capture_output=True, text=True)
+        if "worldmonitor" in result.stdout.lower() or "world" in result.stdout.lower():
+            return False  # Already open, don't open again
+        
+        # Not open, so open it
         webbrowser.open(WORLD_MONITOR_URL)
         return True
     except Exception as e:

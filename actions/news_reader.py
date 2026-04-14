@@ -64,24 +64,24 @@ def get_world_briefing():
     Get a world news briefing with global and India news combined.
     
     Returns:
-        dict: Dictionary with global, india, raw, and india_raw keys
+        str: Combined response with global and India headlines
     """
     try:
-        global_news = get_trending_news("global", 4)
-        india_news = get_trending_news("india", 2)
+        global_news = get_trending_news("global", 3)
+        india_news = get_trending_news("india", 3)
         
         if not global_news:
             return "Couldn't fetch news boss."
         
-        headlines_text = ". ".join(global_news)
-        india_text = ". ".join(india_news) if india_news else ""
+        global_text = ". ".join(global_news)
         
-        return {
-            "global": global_news,
-            "india": india_news,
-            "raw": headlines_text,
-            "india_raw": india_text
-        }
+        if india_news:
+            india_text = ". ".join(india_news)
+            response = f"Here's the global situation boss. {global_text}. And here's what's happening in India boss. {india_text}."
+        else:
+            response = f"Here's the global situation boss. {global_text}. The India news feed is currently unavailable, but you can check BBC India online boss."
+        
+        return response
     
     except Exception as e:
         print(f"Error in world briefing: {e}")
@@ -154,19 +154,18 @@ def get_india_briefing():
     Get an India news briefing.
     
     Returns:
-        dict: Dictionary with headlines and raw formatted text
+        str: India news headlines formatted as response
     """
     try:
         headlines = get_trending_news("india", 5)
         
-        return {
-            "headlines": headlines,
-            "raw": ". ".join(headlines)
-        }
+        if not headlines:
+            return "Couldn't fetch India news boss."
+        
+        response = "Here's what's happening in India boss. " + ". ".join(headlines) + "."
+        
+        return response
     
     except Exception as e:
         print(f"Error in India briefing: {e}")
-        return {
-            "headlines": [],
-            "raw": "Couldn't fetch India news boss."
-        }
+        return "Couldn't fetch India news boss."
